@@ -1,3 +1,23 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+.profile-heading{
+    @apply pb-2 text-xl font-semibold;
+}
+
+.tag{
+    @apply inline-block px-4 py-1 font-semibold text-teal-900 bg-teal-200 rounded-full text-lg
+}
+
+.btn{
+    @apply px-4 py-2 ml-4 text-lg font-semibold border-2 rounded hover:shadow-lg 
+}
+.btn:hover{
+    @apply bg-gray-800
+}
+
+.input{
+    @apply p-1 flex-1 block w-full focus:ring-indigo-500 focus:border-indigo-500 min-w-0 rounded sm:text-sm border-2 border-gray-200
+}

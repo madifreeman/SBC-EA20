@@ -51,6 +51,7 @@ class Header extends React.Component {
                 </button>
               </div>
             </div>
+            {/* TODO: Animate dropdown */}
             {/* <Transition
                   show={menuOpen}
                   enter="transition-height duration-300 transform"
@@ -95,18 +96,6 @@ class Header extends React.Component {
             </div>
             {/* </Transition> */}
           </div>
-
-          {/* <div className="relative block py-28 text-center">
-                <h1 className="text-6xl text-white font-bold">EA20 Selection Days</h1>
-                <h2 className="py-3 text-2xl text-teal-100 font-light">
-                  WED 4TH & THU 5TH DECEMBER
-                </h2>
-                <p className="py-4 px-4 text-xl text-teal-100">
-                  We are delighted to invite you to the first event of
-                  Startupbootcamp's 2020 smart energy program. Come and help us select
-                  the top 10 teams that will disrupt the energy market.
-                </p>
-              </div> */}
         </div>
       </div>
     );

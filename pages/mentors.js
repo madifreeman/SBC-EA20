@@ -4,11 +4,11 @@ import Airtable from "airtable";
 
 export async function getStaticProps() {
   const airtable = new Airtable({
-    apiKey: keyqNRJIfyYYszvny
+    apiKey: process.env.AIRTABLE_API_KEY
   });
 
   const records = await airtable
-    .base("appzJwVbIs7gBM2fm")("Mentors")
+    .base(process.env.AIRTABLE_BASE_ID)("Mentors")
     .select({
       fields: ["Name", "Photo", "Company", "Role", "Slug"],
     })
@@ -31,36 +31,8 @@ export async function getStaticProps() {
   };
 }
 
-// export async function getStaticProps({ params }) {
-//   const records = await airtable
-//     .base("appzJwVbIs7gBM2fm")("Startups")
-//     .select({
-//       filterByFormula: `Slug="${params.slug}"`,
-//     })
-//     .all();
-
-//   const startup = {
-//       name: records[0].get("Name"),
-//       slug: records[0].get("Slug"),
-//       image: records[0].get("Photo")[0].url,
-//       city: records[0].get("City"),
-//       country: records[0].get("Country"),
-//       description: records[0].get("Short Description"),
-//       themes: records[0].get("Themes"),
-//       problem: records[0].get("Problem"),
-//       solution: records[0].get("Solution"),
-//       different: records[0].get("Different"),
-//       achievement: records[0].get("Achievement"),
-//       website: records[0].get("Website"),
-//       team: await getTeamMembers(records[0].get("Name"))
-//     };
-//   return {
-//     props: { startup },
-//   };
-// }
 
 export default function Mentors({ mentors }) {
-  console.log(mentors);
   return (
     <div>
       <Header height="36" />
@@ -72,6 +44,7 @@ export default function Mentors({ mentors }) {
                 Mentors
                 <span className="font-normal text-gray-400">(182)</span>
               </h2>
+              {/* TODO: Make form interactive */}
               <form
                 method="POST"
                 action="/mentors"

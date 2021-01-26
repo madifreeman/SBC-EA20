@@ -2,15 +2,14 @@ import React from "react";
 import Airtable from "airtable";
 import Header from "../../src/components/Header";
 import Footer from "../../src/components/Footer";
-import TeamMember from "../../src/components/TeamMember";
 
 const airtable = new Airtable({
-  apiKey: "keyqNRJIfyYYszvny"
+  apiKey: process.env.AIRTABLE_API_KEY
 });
 
 export async function getStaticPaths() {
   const records = await airtable
-    .base("appzJwVbIs7gBM2fm")("Mentors")
+    .base(process.env.AIRTABLE_BASE_ID)("Mentors")
     .select({
       fields: ["Slug"],
     })
@@ -101,14 +100,14 @@ export default function MentorProfile({ mentor }) {
                         Wed 4th December
                         <span className="hidden xs:inline">December</span>
                       </span>
-                      <span className="inline-block px-4 py-1 font-semibold text-teal-900 bg-teal-200 rounded-full">
+                      <span className="tag">
                         Table 20
                       </span>
                     </div>
                   </div>
                 </div>
                 <div className="pt-8">
-                  <h3 className="pb-4 text-xl font-semibold">
+                  <h3 className="profile-heading">
                     About {mentor.name}:
                   </h3>
                   <p>
@@ -116,9 +115,9 @@ export default function MentorProfile({ mentor }) {
                   </p>
                 </div>
                 <div className="pt-8">
-                  <h3 className="pb-4 text-xl font-semibold">Areas of Expertise:</h3>
+                  <h3 className="profile-heading">Areas of Expertise:</h3>
                   {mentor.expertise.map((area) => {
-                    return <span className="inline-block px-4 py-1 mb-3 mr-2 font-semibold text-teal-900 bg-teal-200 rounded-full">{area}</span>
+                    return <span key={area} className="tag mb-3 mr-4">{area}</span>
                   })}
                 </div>
               </div>

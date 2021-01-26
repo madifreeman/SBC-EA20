@@ -5,12 +5,12 @@ import Footer from "../../src/components/Footer";
 import TeamMember from "../../src/components/TeamMember";
 
 const airtable = new Airtable({
-  apiKey: "keyqNRJIfyYYszvny"
+  apiKey: process.env.AIRTABLE_API_KEY
 });
 
 export async function getStaticPaths() {
   const records = await airtable
-    .base("appzJwVbIs7gBM2fm")("Startups")
+    .base(process.env.AIRTABLE_BASE_ID)("Startups")
     .select({
       fields: ["Slug"],
     })
@@ -101,9 +101,7 @@ export default function StartupProfile({ startup } ) {
                     {/* <ul>
                       <li>
                           <a href="https://www.ag-energy.com.au/">
-                              <i className="mx-3 text-2xl text-teal-500 cursor-pointer fas fa-globe hover:text-teal-400" aria-hidden="true">
-                                  ::before
-                              </i>
+                              // TODO: Social bar/symbols
                           </a>
                       </li>
                   </ul> */}
@@ -114,37 +112,37 @@ export default function StartupProfile({ startup } ) {
             <div className="w-full px-4 pt-8 md:w-full lg:w-3/5 xl:w-2/3 lg:pt-0">
               <div className="px-8 py-12 bg-white rounded-lg shadow md:p-12">
                 <div>
-                  <h3 className="pb-2 text-xl font-semibold">
+                  <h3 className="profile-heading">
                     The problem we're solving
                   </h3>
                   <p className="pb-8 text-lg">{startup.problem}</p>
                 </div>
                 <div>
-                  <h3 className="pb-2 text-xl font-semibold">Our solution:</h3>
+                  <h3 className="profile-heading">Our solution:</h3>
                   <p className="pb-8 text-lg">{startup.solution}</p>
                 </div>
                 <div>
-                  <h3 className="pb-2 text-xl font-semibold">
+                  <h3 className="profile-heading">
                     Our differentiator:
                   </h3>
                   <p className="pb-8 text-lg">{startup.different}</p>
                 </div>
                 <div>
-                  <h3 className="pb-2 text-xl font-semibold">
+                  <h3 className="profile-heading">
                     Biggest achievement:
                   </h3>
                   <p className="pb-8 text-lg">{startup.achievement}</p>
                 </div>
                 <div>
-                  <h3 className="pb-2 text-xl font-semibold">
+                  <h3 className="profile-heading">
                     Program themes:
                   </h3>
                   {startup.themes.map((theme) => {
-                    return <span className="inline-block px-4 py-1 mb-3 mr-2 font-semibold text-teal-900 bg-teal-200 rounded-full">{theme}</span>
+                    return <span key={theme} className="tag mb-3 mr-2">{theme}</span>
                   })}
                 </div>
                 <div>
-                  <h3 className="pb-2 text-xl font-semibold">
+                  <h3 className="profile-heading">
                     Team members:
                     <div className="flex flex-wrap pt-4">
                     {startup.team.map((teamMember) => {

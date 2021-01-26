@@ -1,4 +1,3 @@
-import Link from "next/link";
 import Header from "../src/components/Header";
 import Startup from "../src/components/Startup";
 import React, { useState } from "react";
@@ -7,11 +6,11 @@ import Footer from "../src/components/Footer";
 
   export async function getStaticProps() {
     const airtable = new Airtable({
-      apiKey: "keyqNRJIfyYYszvny"
+      apiKey: process.env.AIRTABLE_API_KEY
     });
   
     const records = await airtable
-      .base('appzJwVbIs7gBM2fm')('Startups')
+      .base(process.env.AIRTABLE_BASE_ID)('Startups')
       .select({
         fields: ["Name",
         "Photo",

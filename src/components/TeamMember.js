@@ -12,6 +12,7 @@ class TeamMember extends React.Component {
           <div>
             <p className="font-semibold">{this.props.name}</p>
             <p className="leading-tight text-gray-500">{this.props.role}</p>
+            {/* TODO: Add social bar/symbols */}
             {/* <ul className="flex pt-1">
               <li key="1">
                 <a href={this.props.linkedin}></a>

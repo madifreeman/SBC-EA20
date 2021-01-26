@@ -17,13 +17,13 @@ class Footer extends React.Component {
           <div className="flex justify-center mt-4">
             <a
               href="#"
-              className="px-4 py-2 ml-4 text-lg font-semibold text-white border-2 border-white rounded hover:shadow-lg hover:bg-gray-800"
+              className="btn hover:bg-gray-800 text-white border-white hover:bg-gray-800"
             >
               Learn More
             </a>
             <a
               href="#"
-              className="px-4 py-2 ml-4 text-lg font-semibold text-teal-500 bg-white border-2 border-white rounded hover:shadow-lg hover:bg-gray-800 hover:text-white"
+              className="btn hover:bg-gray-800 text-teal-500 bg-white  border-white  hover:text-white"
             >
               Register Now
             </a>
@@ -155,6 +155,7 @@ class Footer extends React.Component {
               <p className="mt-4 text-sm text-gray-500 md:mt-0">
                 Copyright © 2019 Startupbootcamp Australia. All rights reserved.
               </p>
+              {/* TODO: Add social bar */}
             </div>
           </div>
         </div>

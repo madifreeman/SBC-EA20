@@ -2,6 +2,7 @@ import React from "react";
 
 class TextInput extends React.Component {
   constructor(props) {
+    console.log(props)
     super(props);
     this.state = {value: props.fieldValue};
 

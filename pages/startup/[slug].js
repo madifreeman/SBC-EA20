@@ -39,11 +39,11 @@ export async function getStaticProps({ params }) {
   const startup = {
       name: records[0].get("Name") || "",
       slug: records[0].get("Slug") || "",
-      image: records[0].get("Photo")[0].url || "",
+      image: records[0].get("Photo") ? records[0].get("Photo")[0].url : "",
       city: records[0].get("City") || "",
       country: records[0].get("Country") || "",
       description: records[0].get("Short Description") || "",
-      themes: records[0].get("Themes") || "",
+      themes: records[0].get("Themes") || [],
       problem: records[0].get("Problem") || "",
       solution: records[0].get("Solution") || "",
       different: records[0].get("Different") || "",
@@ -68,7 +68,7 @@ export async function getTeamMembers(startup) {
       return {
         name: member.get("Name"),
         role: member.get("Role"),
-        image: member.get("Photo")[0].url,
+        image: member.get("Photo") ? member.get("Photo")[0].url : "",
         twitter: member.get("Twitter") || null,
         linkedIn: member.get("LinkedIn") || null,
       };

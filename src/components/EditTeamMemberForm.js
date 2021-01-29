@@ -5,7 +5,6 @@ import Airtable from "airtable";
 
 class EditTeamMemberForm extends React.Component {
   constructor(props) {
-      console.log("New Team Member")
     super(props);
     this.state = {
       name: this.props.name,

@@ -1,6 +1,14 @@
 import React from "react";
 
 class FileUpload extends React.Component {
+  handleFileChange = (e) => {
+    console.log("File changed")
+    console.log(e.target.files)
+  };
+
+  handleClick = (e) => {
+    this.inputElement.click();
+  };
   render() {
     return (
       <div onClick={this.handleClick}>
@@ -20,14 +28,7 @@ class FileUpload extends React.Component {
     );
   }
 
-  handleFileChange = (e) => {
-    console.log("File changed")
-    console.log(e.target.files[0])
-  };
-
-  handleClick = (e) => {
-    this.inputElement.click();
-  };
+  
 }
 
 export default FileUpload;

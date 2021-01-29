@@ -6,66 +6,71 @@ import Airtable from "airtable";
 class AddTeamMemberForm extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      name: "",
-      role: "",
-      twitter: "",
-      linkedIn: "",
-      photo: "",
-    };
     this.handleSubmit = this.handleSubmit.bind(this);
     this.addButton = React.createRef();
-    // this.handleDelete = this.handleDelete.bind(this);
+    this.form = React.createRef();
+    this.baseState = {
+      name: "",
+      role: "",
+      linkedIn: "",
+      twitter: "",
+      photo: "",
+    };
+    this.state = this.baseState;
   }
   async handleSubmit(e) {
     e.preventDefault();
-
-    const newTeamMember = {
-      Name: this.state.name,
-      Photo: "",
-      Role: this.state.role,
-      Twitter: this.state.twitter,
-      LinkedIn: this.state.linkedIn,
-    };
+    this.addButton.current.value = "Adding...";
     const airtable = new Airtable({
       apiKey: process.env.AIRTABLE_API_KEY,
     });
 
-    await airtable
+    const records = await airtable
       .base(process.env.AIRTABLE_BASE_ID)("Team Members ")
-      .create(
-        [
-          {
-            fields: {
-              ...newTeamMember,
-              Startup: [this.props.startupId],
-            },
+      .create([
+        {
+          fields: {
+            Name: this.state.name,
+            Photo: "",
+            Role: this.state.role,
+            Twitter: this.state.twitter,
+            LinkedIn: this.state.linkedIn,
+            Startup: [this.props.startupId],
           },
-        ],
-        function (err, records) {
-          if (err) {
-            console.error(err);
-            return;
-          }
-
-          newTeamMember["Id"] = records[0].getId();
-        }
-      );
-    console.log(newTeamMember)
+        },
+      ]);
+    const newTeamMember = {
+      id: records[0].getId(),
+      name: records[0].get("Name"),
+      role: records[0].get("Role"),
+      image: records[0].get("Photo") ? member.get("Photo")[0].url : "",
+      twitter: records[0].get("Twitter") || "",
+      linkedIn: records[0].get("LinkedIn") || "",
+    };
     this.addButton.current.value = "Added!";
     this.addButton.current.focus();
-    setTimeout(()=> this.props.onAdd(newTeamMember), 500)
+    setTimeout(() => {
+      this.setState(this.baseState);
+      this.props.onAdd(newTeamMember);
+    }, 500);
   }
 
   render() {
     return (
-      <form className="divide-y-0" onSubmit={this.handleSubmit}>
-        <div className="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:border-t sm:border-gray-200 sm:pt-5 text-gray-500 text-sm">
+      <form
+        id="form"
+        className="divide-y-0"
+        onSubmit={this.handleSubmit}
+        ref={this.form}
+      >
+        {/* <div className="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:border-t sm:border-gray-200 sm:pt-5 text-gray-500 text-sm">
           Adding new team member:
-        </div>
+        </div> */}
         <TextInput
+          // Component is only re-rendering when the key changes (not when fieldValue changes) - so have linked key to state
+          key={`name${this.state.name}`}
           fieldName="Team Member's Name"
-          //   fieldValue={this.props.teamMember.name}
+          fieldValue={this.state.name}
           isRequired={true}
           fieldDescription=""
           inputType="short"
@@ -74,8 +79,9 @@ class AddTeamMemberForm extends React.Component {
           }}
         />
         <TextInput
+          key={`role${this.state.role}`}
           fieldName="Role"
-          //   fieldValue={this.props.teamMember.role}
+          fieldValue={this.state.role}
           isRequired={true}
           fieldDescription=""
           inputType="short"
@@ -84,8 +90,9 @@ class AddTeamMemberForm extends React.Component {
           }}
         />
         <TextInput
+          key={`twitter${this.state.twitter}`}
           fieldName="Twitter"
-          //   fieldValue={this.props.teamMember.twitter}
+          fieldValue={this.state.twitter}
           isRequired={false}
           fieldDescription=""
           inputType="short"
@@ -94,7 +101,9 @@ class AddTeamMemberForm extends React.Component {
           }}
         />
         <TextInput
+          key={`linkedIn${this.state.linkedIn}`}
           fieldName="LinkedIn"
+          fieldValue={this.state.linkedIn}
           isRequired={false}
           fieldDescription=""
           inputType="short"

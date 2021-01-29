@@ -70,11 +70,24 @@ export async function getTeamMembers(startup) {
 class EditStartup extends React.Component {
   constructor(props) {
     super(props);
-    console.log(props.startup)
-    this.state = props.startup;
+    // this.state = props.startup;
+
+    // Seperate startup details and team details into 2 seperate objects
+    const { team, ...startup } = props.startup;
+    // Convert team array into object with team member id as key
+    let teamMembers = {};
+    team.forEach((teamMember) => {
+      teamMembers[teamMember.id] = teamMember;
+    });
+    this.state = {
+      startup: startup,
+      team: teamMembers,
+    };
+    console.log(this.state);
     this.state.addingTeamMember = false;
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handleTeamMemberDelete = this.handleTeamMemberDelete.bind(this);
+    this.handleInputChange = this.handleInputChange.bind(this)
   }
   themes = [
     "Electric Mobility",
@@ -87,39 +100,33 @@ class EditStartup extends React.Component {
   ];
   handleSubmit(e) {
     e.preventDefault();
+    console.log(this.state.startup.name);
     airtable
       .base(process.env.AIRTABLE_BASE_ID)("Startups")
       .update(
         [
           {
-            id: this.state.id,
+            id: this.state.startup.id,
             fields: {
-              Name: this.state.name,
+              Name: this.state.startup.name,
               // "Photo": [
               //   {
               //     "id": "att1ad0TKWelqBmCq"
               //   }
               // ],
-              Website: this.state.website,
-              Country: this.state.country,
-              LinkedIn: this.state.linkedIn,
-              // "Team Members": [
-              //   "recW7TnqoKfHSxdca",
-              //   "recQ4LlxYc51BoDsD",
-              //   "recPVUyX9uNjZWj2O",
-              //   "recQwxMKpOchdmfS4",
-              //   "recwPPDR0prIGlwDr"
-              // ],
-              Facebook: this.state.facebook,
-              Twitter: this.state.twitter,
-              Email: this.state.email,
-              "Short Description": this.state.description,
-              City: this.state.city,
-              Achievement: this.state.achievement,
-              Themes: this.state.themes,
-              Problem: this.state.problem,
-              Solution: this.state.solution,
-              Different: this.state.different,
+              Website: this.state.startup.website,
+              Country: this.state.startup.country,
+              LinkedIn: this.state.startup.linkedIn,
+              Facebook: this.state.startup.facebook,
+              Twitter: this.state.startup.twitter,
+              Email: this.state.startup.email,
+              "Short Description": this.state.startup.description,
+              City: this.state.startup.city,
+              Achievement: this.state.startup.achievement,
+              Themes: this.state.startup.themes,
+              Problem: this.state.startup.problem,
+              Solution: this.state.startup.solution,
+              Different: this.state.startup.different,
             },
           },
         ],
@@ -148,11 +155,16 @@ class EditStartup extends React.Component {
         console.log("Deleted", deletedRecords.length, "records");
       };
     // Remove team member from state
-    const newTeamArray = this.state.team.filter(
-      (teamMember) => teamMember.id !== teamMemberId
-    );
-    console.log(newTeamArray);
-    this.setState({ team: newTeamArray });
+    const newTeam = { ...this.state.team };
+    delete newTeam[teamMemberId];
+
+    this.setState({ team: newTeam });
+  }
+
+  handleInputChange(updatedVal, fieldId) {
+    const newStartup = { ...this.state.startup };
+    newStartup[`${fieldId}`] = updatedVal;
+    this.setState({ startup: newStartup });
   }
   render() {
     return (
@@ -191,9 +203,7 @@ class EditStartup extends React.Component {
                     fieldValue={this.props.startup.name}
                     isRequired={true}
                     inputType="short"
-                    onChange={(updated) => {
-                      this.setState({ name: updated });
-                    }}
+                    onChange={(updated) => this.handleInputChange(updated, "name")}
                   />
                   <TextInput
                     fieldName="City"
@@ -201,9 +211,7 @@ class EditStartup extends React.Component {
                     isRequired={true}
                     fieldDescription="What city is your startup primarily located in?"
                     inputType="short"
-                    onChange={(updated) => {
-                      this.setState({ city: updated });
-                    }}
+                    onChange={(updated) => this.handleInputChange(updated, "city")}
                   />
                   <TextInput
                     fieldName="Country"
@@ -211,9 +219,7 @@ class EditStartup extends React.Component {
                     isRequired={true}
                     fieldDescription="What country is your startup primarily located in?"
                     inputType="short"
-                    onChange={(updated) => {
-                      this.setState({ country: updated });
-                    }}
+                    onChange={(updated) => this.handleInputChange(updated, "country")}
                   />
                   <TextInput
                     fieldName="Short Description"
@@ -222,9 +228,7 @@ class EditStartup extends React.Component {
                     fieldDescription="Max 150 characters."
                     inputType="long"
                     maxLength="150"
-                    onChange={(updated) => {
-                      this.setState({ description: updated });
-                    }}
+                    onChange={(updated) => this.handleInputChange(updated, "description")}
                   />
                   <TextInput
                     fieldName="The Problem"
@@ -233,9 +237,7 @@ class EditStartup extends React.Component {
                     fieldDescription="What is the problem that your startup is solving? Max 500 characters."
                     inputType="long"
                     maxLength="500"
-                    onChange={(updated) => {
-                      this.setState({ problem: updated });
-                    }}
+                    onChange={(updated) => this.handleInputChange(updated, "problem")}
                   />
                   <TextInput
                     fieldName="The Solution"
@@ -244,9 +246,7 @@ class EditStartup extends React.Component {
                     fieldDescription="What is your startup's solution to this problem? Max 500 characters."
                     inputType="long"
                     maxLength="500"
-                    onChange={(updated) => {
-                      this.setState({ solution: updated });
-                    }}
+                    onChange={(updated) => this.handleInputChange(updated, "solution")}
                   />
                   <TextInput
                     fieldName="Your Differentiator"
@@ -255,9 +255,7 @@ class EditStartup extends React.Component {
                     fieldDescription="How is your startup different to existing solutions? Max 500 characters."
                     inputType="long"
                     maxLength="500"
-                    onChange={(updated) => {
-                      this.setState({ different: updated });
-                    }}
+                    onChange={(updated) => this.handleInputChange(updated, "different")}
                   />
                   <TextInput
                     fieldName="Biggest Achievment"
@@ -266,9 +264,7 @@ class EditStartup extends React.Component {
                     fieldDescription="What is your startup's biggest achievement to date? Max 500 characters."
                     inputType="long"
                     maxLength="500"
-                    onChange={(updated) => {
-                      this.setState({ achievement: updated });
-                    }}
+                    onChange={(updated) => this.handleInputChange(updated, "achievement")}
                   />
 
                   <div className="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-center sm:border-t sm:border-gray-200 sm:pt-5">
@@ -294,27 +290,25 @@ class EditStartup extends React.Component {
                                   name="themes[]"
                                   value={theme}
                                   checked={
-                                    this.state.themes.includes(theme)
+                                    this.state.startup.themes.includes(theme)
                                       ? true
                                       : false
                                   }
                                   onChange={(e) => {
                                     if (e.target.checked) {
                                       console.log("appended");
-                                      const newThemes = this.state.themes.concat(
+                                      const newThemes = this.state.startup.themes.concat(
                                         [e.target.value]
                                       );
-                                      this.setState({ themes: newThemes });
-                                      console.log(this.state);
+                                      this.handleInputChange(newThemes, "themes")
                                     } else {
                                       console.log("removed");
-                                      const idx = this.state.themes.indexOf(
+                                      let newThemes = [... this.state.startup.themes]
+                                      const idx = newThemes.indexOf(
                                         theme
                                       );
-                                      this.state.themes.splice(idx, 1);
-                                      this.setState({
-                                        themes: this.state.themes,
-                                      });
+                                      newThemes.splice(idx, 1);
+                                      this.handleInputChange(newThemes, "themes")
                                     }
                                   }}
                                 />
@@ -333,9 +327,7 @@ class EditStartup extends React.Component {
                     isRequired={false}
                     fieldDescription="What is the url of your startup's website?"
                     inputType="short"
-                    onChange={(updated) => {
-                      this.setState({ website: updated });
-                    }}
+                    onChange={(updated) => this.handleInputChange(updated, "website")}
                   />
                   <TextInput
                     fieldName="Contact Email"
@@ -343,9 +335,7 @@ class EditStartup extends React.Component {
                     isRequired={false}
                     fieldDescription="What is your startup's generic email? Eg. hello@, info@"
                     inputType="short"
-                    onChange={(updated) => {
-                      this.setState({ email: updated });
-                    }}
+                    onChange={(updated) => this.handleInputChange(updated, "email")}
                   />
                   <TextInput
                     fieldName="LinkedIn"
@@ -353,9 +343,7 @@ class EditStartup extends React.Component {
                     isRequired={false}
                     fieldDescription="What is the url of your startup's LinkedIn profile?"
                     inputType="short"
-                    onChange={(updated) => {
-                      this.setState({ linkedIn: updated });
-                    }}
+                    onChange={(updated) => this.handleInputChange(updated, "linkedIn")}
                   />
                   <TextInput
                     fieldName="Twitter"
@@ -363,9 +351,7 @@ class EditStartup extends React.Component {
                     isRequired={false}
                     fieldDescription="What is the url of your startup's Twitter profile?"
                     inputType="short"
-                    onChange={(updated) => {
-                      this.setState({ twitter: updated });
-                    }}
+                    onChange={(updated) => this.handleInputChange(updated, "twitter")}
                   />
                   <TextInput
                     fieldName="Facebook"
@@ -373,9 +359,7 @@ class EditStartup extends React.Component {
                     isRequired={false}
                     fieldDescription="What is the url of your startup's Facebook profile?"
                     inputType="short"
-                    onChange={(updated) => {
-                      this.setState({ facebook: updated });
-                    }}
+                    onChange={(updated) => this.handleInputChange(updated, "facebook")}
                   />
 
                   <div className="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-center sm:border-t sm:border-gray-200 sm:pt-5">
@@ -407,15 +391,15 @@ class EditStartup extends React.Component {
                 </div>
               </div>
             </div>
-          </form>
 
-          <div className="pb-6">
-            <input
-              type="submit"
-              className="block py-2 px-4 rounded shadow-lg float-right font-semibold mr-2 cursor-pointer bg-teal-500 text-white hover:bg-teal-600 w-48"
-              value="Update Profile"
-            />
-          </div>
+            <div className="py-6">
+              <input
+                type="submit"
+                className="block py-2 px-4 rounded shadow-lg float-right font-semibold mr-2 cursor-pointer bg-teal-500 text-white hover:bg-teal-600 w-48"
+                value="Update Profile"
+              />
+            </div>
+          </form>
           <div className="p-8" />
           {/* ######################################### EDIT TEAM ######################################### */}
           <div className="pt-12 flex justify-between">
@@ -458,16 +442,32 @@ class EditStartup extends React.Component {
                           addingTeamMember: !this.state.addingTeamMember,
                         });
                       }}
-                      onAdd={(teamMember)=> {
-                        const newTeam = [...this.state.team];
-                        newTeam.unshift(teamMember)
-                        console.log(newTeam)
-                        this.setState({team: newTeam})
-                        this.setState({addingTeamMember: false})
+                      onAdd={(teamMember) => {
+                        // console.log(teamMember)
+                        // console.log(teamMember.id)
+                        const newTeam = { ...this.state.team };
+                        newTeam[teamMember.id] = teamMember;
+                        console.log(newTeam);
+                        this.setState({ team: newTeam });
+                        this.setState({ addingTeamMember: false });
                       }}
                     />
                   </div>
-                  {this.state.team.map((teamMember) => {
+                  {Object.keys(this.state.team).map((key) => {
+                    return (
+                      <EditTeamMemberForm
+                        key={key}
+                        name={this.state.team[key].name}
+                        role={this.state.team[key].role}
+                        twitter={this.state.team[key].twitter}
+                        linkedIn={this.state.team[key].linkedIn}
+                        image={this.state.team[key].image}
+                        id={key}
+                        onDelete={this.handleTeamMemberDelete}
+                      />
+                    );
+                  })}
+                  {/* {this.state.teamMembers.map((teamMember) => {
                     return (
                       <EditTeamMemberForm
                         key={teamMember.id}
@@ -480,7 +480,7 @@ class EditStartup extends React.Component {
                         onDelete={this.handleTeamMemberDelete}
                       />
                     );
-                  })}
+                  })} */}
                 </div>
               </div>
             </div>

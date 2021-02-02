@@ -26,11 +26,11 @@ import Footer from "../src/components/Footer";
       return {
         name: startup.get('Name'),
         slug: startup.get('Slug'),
-        image: startup.get('Photo')[0].url,
+        image: startup.get('Photo') ? startup.get('Photo')[0].url : "", 
         city: startup.get('City'),
         country: startup.get('Country'),
         description: startup.get('Short Description'),
-        themes: startup.get('Themes')
+        themes: startup.get('Themes') || [],
       };
     });
     

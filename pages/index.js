@@ -2,11 +2,12 @@ import React, { useState } from "react";
 import { Transition } from "@headlessui/react";
 import Header from "../src/components/Header";
 import Footer from "../src/components/Footer";
+import { RightArrow } from "../public/icons";
 
 export default function Home() {
   return (
     <div>
-      <Header height="screen"/>
+      <Header height="screen" />
       <div className="relative block pt-32 pb-40 text-center">
         <h1 className="text-6xl text-white font-bold">EA20 Selection Days</h1>
         <h2 className="py-3 text-2xl text-teal-100 font-light">
@@ -43,9 +44,10 @@ export default function Home() {
             <h3 className="py-2 text-lg">
               Sign up today and be part of this unique experience.
             </h3>
-            <p className="py-2 text-teal-500 font-semibold text-lg">
-              <a href="#">Register Now</a>
-            </p>
+            <div className="py-2 text-teal-500 font-semibold text-lg flex items-center justify-center">
+              <a href="/startups" className="pr-1">Register Now</a>
+              <RightArrow width="4"/>
+            </div>
           </div>
         </div>
         <div className="p-4 w-full md:w-1/2 lg:w-1/3">
@@ -73,9 +75,10 @@ export default function Home() {
               After receiving 1000+ applications worldwide, these are the 20
               finalists.
             </h3>
-            <p className="py-2 text-teal-500 font-semibold text-lg">
-              <a href="#">View Startups</a>
-            </p>
+            <div className="py-2 text-teal-500 font-semibold text-lg flex items-center justify-center">
+              <a href="/startups" className="pr-1">View Startups</a>
+              <RightArrow width="4"/>
+            </div>
           </div>
         </div>
         <div className="p-4 w-full md:w-1/2 lg:w-1/3">
@@ -107,9 +110,10 @@ export default function Home() {
             <h3 className="py-2 text-lg">
               Meet the most experienced leaders in the smart energy industry.
             </h3>
-            <p className="py-2 text-teal-500 font-semibold text-lg">
-              <a href="#">View Mentors</a>
-            </p>
+            <div className="py-2 text-teal-500 font-semibold text-lg flex items-center justify-center">
+              <a href="/mentors" className="pr-1">View Mentors</a>
+              <RightArrow width="4"/>
+            </div>
           </div>
         </div>
       </div>
@@ -141,8 +145,9 @@ export default function Home() {
               </p>
             </div>
           </div>
-          <a href="#" className="text-md text-teal-500 font-semibold">
-            View Startups
+          <a href="#" className="text-lg text-teal-500 font-semibold flex items-center">
+            <h2 className="pr-1">View Startups </h2>
+            <RightArrow width="4"/>
           </a>
         </div>
         <div className="px-8">
@@ -153,7 +158,7 @@ export default function Home() {
           ></img>
         </div>
       </div>
-      <Footer/>
+      <Footer />
     </div>
   );
 }

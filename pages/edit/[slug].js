@@ -6,6 +6,7 @@ import TextInput from "../../src/components/TextInput";
 import FileUpload from "../../src/components/FileUpload";
 import EditTeamMemberForm from "../../src/components/EditTeamMemberForm";
 import AddTeamMemberForm from "../../src/components/AddTeamMemberForm";
+import ProfileImage from "../../src/components/ProfileImage";
 
 const airtable = new Airtable({
   apiKey: process.env.AIRTABLE_API_KEY,
@@ -83,11 +84,11 @@ class EditStartup extends React.Component {
       startup: startup,
       team: teamMembers,
     };
-    console.log(this.state);
     this.state.addingTeamMember = false;
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handleTeamMemberDelete = this.handleTeamMemberDelete.bind(this);
     this.handleInputChange = this.handleInputChange.bind(this)
+    this.updateProfileBtn = React.createRef()
   }
   themes = [
     "Electric Mobility",
@@ -98,10 +99,10 @@ class EditStartup extends React.Component {
     "Smart Buildings and Infrastructure",
     "Other",
   ];
-  handleSubmit(e) {
+  async handleSubmit(e) {
     e.preventDefault();
-    console.log(this.state.startup.name);
-    airtable
+    this.updateProfileBtn.current.value = "Updating..."
+    const records = await airtable
       .base(process.env.AIRTABLE_BASE_ID)("Startups")
       .update(
         [
@@ -109,11 +110,11 @@ class EditStartup extends React.Component {
             id: this.state.startup.id,
             fields: {
               Name: this.state.startup.name,
-              // "Photo": [
-              //   {
-              //     "id": "att1ad0TKWelqBmCq"
-              //   }
-              // ],
+              Photo: [
+                {
+                  "url": this.state.startup.image
+                }
+              ],
               Website: this.state.startup.website,
               Country: this.state.startup.country,
               LinkedIn: this.state.startup.linkedIn,
@@ -123,23 +124,16 @@ class EditStartup extends React.Component {
               "Short Description": this.state.startup.description,
               City: this.state.startup.city,
               Achievement: this.state.startup.achievement,
-              Themes: this.state.startup.themes,
+              Themes: this.state.startup.themes || [],
               Problem: this.state.startup.problem,
               Solution: this.state.startup.solution,
               Different: this.state.startup.different,
             },
           },
-        ],
-        function (err, records) {
-          if (err) {
-            console.error(err);
-            return;
-          }
-          records.forEach(function (record) {
-            console.log(record.get("Name"));
-          });
-        }
+        ]
       );
+    this.updateProfileBtn.current.value = "Updated!"
+    setTimeout(() => this.updateProfileBtn.current.value = "Update Profile", 3000)
   }
 
   handleTeamMemberDelete(teamMemberId) {
@@ -152,7 +146,6 @@ class EditStartup extends React.Component {
           console.error(err);
           return;
         }
-        console.log("Deleted", deletedRecords.length, "records");
       };
     // Remove team member from state
     const newTeam = { ...this.state.team };
@@ -296,13 +289,11 @@ class EditStartup extends React.Component {
                                   }
                                   onChange={(e) => {
                                     if (e.target.checked) {
-                                      console.log("appended");
                                       const newThemes = this.state.startup.themes.concat(
                                         [e.target.value]
                                       );
                                       this.handleInputChange(newThemes, "themes")
                                     } else {
-                                      console.log("removed");
                                       let newThemes = [... this.state.startup.themes]
                                       const idx = newThemes.indexOf(
                                         theme
@@ -372,19 +363,12 @@ class EditStartup extends React.Component {
                     <div className="mt-1 sm:mt-0 sm:col-span-2">
                       <div className="flex items-center">
                         <span className="h-12 w-12 rounded-full overflow-hidden bg-gray-100">
-                          {/* TODO: handle what is displayed when there is no image */}
-
-                          <img src={this.props.startup.image} />
-                          {/* <svg
-                          className="h-full w-full text-gray-300"
-                          fill="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg> */}
+                          <ProfileImage imageURL={this.state.startup.image}/>
                         </span>
-                        {/* <input className="hidden" type="file" onChange={onFileChange} ref={input => this.inputElement = input}/>  */}
-                        <FileUpload />
+                        <FileUpload currentImage={this.state.startup.image} onChange={(imageURL)=> {
+                            this.handleInputChange(imageURL, "image")
+                          }}
+                        />
                       </div>
                     </div>
                   </div>
@@ -397,6 +381,7 @@ class EditStartup extends React.Component {
                 type="submit"
                 className="block py-2 px-4 rounded shadow-lg float-right font-semibold mr-2 cursor-pointer bg-teal-500 text-white hover:bg-teal-600 w-48"
                 value="Update Profile"
+                ref={this.updateProfileBtn}
               />
             </div>
           </form>
@@ -443,11 +428,8 @@ class EditStartup extends React.Component {
                         });
                       }}
                       onAdd={(teamMember) => {
-                        // console.log(teamMember)
-                        // console.log(teamMember.id)
                         const newTeam = { ...this.state.team };
                         newTeam[teamMember.id] = teamMember;
-                        console.log(newTeam);
                         this.setState({ team: newTeam });
                         this.setState({ addingTeamMember: false });
                       }}
@@ -467,20 +449,6 @@ class EditStartup extends React.Component {
                       />
                     );
                   })}
-                  {/* {this.state.teamMembers.map((teamMember) => {
-                    return (
-                      <EditTeamMemberForm
-                        key={teamMember.id}
-                        name={teamMember.name}
-                        role={teamMember.role}
-                        twitter={teamMember.twitter}
-                        linkedIn={teamMember.linkedIn}
-                        image={teamMember.image}
-                        id={teamMember.id}
-                        onDelete={this.handleTeamMemberDelete}
-                      />
-                    );
-                  })} */}
                 </div>
               </div>
             </div>

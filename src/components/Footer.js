@@ -1,6 +1,9 @@
 import React from "react";
+import {InstagramIcon, YoutubeIcon, LinkedInIcon, TwitterIcon, FacebookIcon} from "../../public/icons";
+
 
 class Footer extends React.Component {
+  iconWidth = 6;
   render() {
     return (
       <footer>
@@ -151,11 +154,37 @@ class Footer extends React.Component {
             </div>
           </div>
           <div className="py-6 border-t border-gray-700">
-            <div className="container flex flex-wrap justify-center py-4 mx-auto md:justify-between md:py-0">
-              <p className="mt-4 text-sm text-gray-500 md:mt-0">
+            <div className="container flex flex-wrap justify-center items-center py-4 mx-auto md:justify-between md:py-0">
+              <p className="mt-4 px-6 text-sm text-gray-500 md:mt-0">
                 Copyright © 2019 Startupbootcamp Australia. All rights reserved.
               </p>
-              {/* TODO: Add social bar */}
+              <ul className="flex items-center order-first md:order-last text-gray-500">
+                <li className="p-2 hover:text-teal-400">
+                  <a href="https://www.facebook.com/sbcAUS">
+                    <FacebookIcon width={this.iconWidth}/>
+                  </a>
+                </li>
+                <li className="p-2 hover:text-teal-400">
+                  <a href="https://twitter.com/sbcenergyaus">
+                    <TwitterIcon width={this.iconWidth}/>
+                  </a>
+                </li>
+                <li className="p-2 hover:text-teal-400">
+                  <a href="https://www.linkedin.com/showcase/startupbootcamp-australia/">
+                  <LinkedInIcon width={this.iconWidth}/>
+                  </a>
+                </li>
+                <li className="p-2 hover:text-teal-400">
+                  <a href="https://www.youtube.com/channel/UChzXM1nvKInDPbsYo5jMisg/">
+                    <YoutubeIcon width={this.iconWidth}/>
+                  </a>
+                </li>
+                <li className="p-2 hover:text-teal-400">
+                  <a href="https://www.instagram.com/sbcaus/">
+                    <InstagramIcon width={this.iconWidth}/>
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>
         </div>

@@ -6,6 +6,7 @@ import TextInput from "../src/components/TextInput";
 import FileUpload from "../src/components/FileUpload";
 import EditTeamMemberForm from "../src/components/EditTeamMemberForm";
 import AddTeamMemberForm from "../src/components/AddTeamMemberForm";
+import ProfileImage from "../src/components/ProfileImage";
 
 const airtable = new Airtable({
   apiKey: process.env.AIRTABLE_API_KEY,
@@ -33,6 +34,9 @@ class AddStartup extends React.Component {
   ];
   async handleSubmit(e) {
     e.preventDefault();
+    this.startupDetailsForm.current.className = "hidden";
+    window.scrollTo(0, 0)
+    this.teamDetailsForm.current.className = "block";
     console.log(this.state.startup.name);
     const records = await airtable
       .base(process.env.AIRTABLE_BASE_ID)("Startups")
@@ -40,11 +44,11 @@ class AddStartup extends React.Component {
         {
           fields: {
             Name: this.state.startup.name,
-            // "Photo": [
-            //   {
-            //     "id": "att1ad0TKWelqBmCq"
-            //   }
-            // ],
+            Photo: [
+              {
+                "url": this.state.startup.image
+              }
+            ],
             Website: this.state.startup.website || "",
             Country: this.state.startup.country,
             LinkedIn: this.state.startup.linkedIn || "",
@@ -65,8 +69,6 @@ class AddStartup extends React.Component {
     newStartup.id = records[0].getId();
     newStartup.slug = records[0].get("Slug");
     this.setState({ startup: newStartup });
-    this.startupDetailsForm.current.className = "hidden";
-    this.teamDetailsForm.current.className = "block";
   }
 
   handleTeamMemberDelete(teamMemberId) {
@@ -324,15 +326,12 @@ class AddStartup extends React.Component {
                         <div className="flex items-center">
                           <span className="h-12 w-12 rounded-full overflow-hidden bg-gray-100">
                             {/* TODO: handle what is displayed when there is no image */}
-                            <svg
-                              className="h-full w-full text-gray-300"
-                              fill="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
-                            </svg>
+                            <ProfileImage imageURL={this.state.startup.image}/>
+                            
                           </span>
-                          <FileUpload />
+                          <FileUpload currentImage={this.state.startup.image} onChange={(imageURL)=> {
+                            this.handleInputChange(imageURL, "image")
+                          }}/>
                         </div>
                       </div>
                     </div>
@@ -350,7 +349,7 @@ class AddStartup extends React.Component {
             </form>
           </div>
           {/* ######################################### EDIT TEAM ######################################### */}
-          <div className="" ref={this.teamDetailsForm}>
+          <div className="hidden" ref={this.teamDetailsForm}>
             <div className="pt-4 flex justify-between">
               <div>
                 <h3 className="text-lg leading-6 font-medium text-gray-900">
@@ -437,6 +436,7 @@ class AddStartup extends React.Component {
                       window.location.href = "/manageStartups"
                     })
                 }}
+                // TODO: delete team members from Team Members DB
               >
                 Cancel
               </button>

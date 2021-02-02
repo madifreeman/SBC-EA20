@@ -15,7 +15,7 @@
     @apply px-4 py-2 ml-4 text-lg font-semibold border-2 rounded hover:shadow-lg 
 }
 .btn:hover{
-    @apply bg-gray-800
+    @apply  shadow-lg opacity-80
 }
 
 .input{

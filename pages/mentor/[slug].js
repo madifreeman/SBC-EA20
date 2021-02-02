@@ -2,6 +2,7 @@ import React from "react";
 import Airtable from "airtable";
 import Header from "../../src/components/Header";
 import Footer from "../../src/components/Footer";
+import { LinkedInIcon } from "../../public/icons";
 
 const airtable = new Airtable({
   apiKey: process.env.AIRTABLE_API_KEY
@@ -75,16 +76,14 @@ export default function MentorProfile({ mentor }) {
                     <p className="pt-3">
                       {mentor.city + ", " + mentor.country}
                     </p>
-                    {/* <ul className="flex justify-center pt-4 text-gray-500 md:justify-start lg:justify-center">
-                        <li>
+                    <ul className="flex justify-center pt-4 text-teal-500 md:justify-start lg:justify-center">
+                        <li className="px-2">
                             <a href={mentor.linkedIn}>
-                                <i className="mx-2 text-3xl text-teal-500 cursor-pointer fab fa-linkedin hover:text-teal-400" aria-hidden="true">
-                                    ::before
-                                </i>
+                                <LinkedInIcon width="6"/>
                             </a>
                         </li>
 
-                    </ul> */}
+                    </ul>
                   </div>
                 </div>
               </div>

@@ -1,6 +1,7 @@
 import React from "react";
 import FileUpload from "../../src/components/FileUpload";
 import TextInput from "../../src/components/TextInput";
+import ProfileImage from "../../src/components/ProfileImage";
 import Airtable from "airtable";
 
 class EditTeamMemberForm extends React.Component {
@@ -14,51 +15,58 @@ class EditTeamMemberForm extends React.Component {
       image: this.props.image,
       id: this.props.id,
     };
-
+    this.updateBtn = React.createRef();
+    this.deleteBtn = React.createRef();
     this.handleUpdate = this.handleUpdate.bind(this);
     this.handleDelete = this.handleDelete.bind(this);
   }
-  handleUpdate(e) {
+  async handleUpdate(e) {
     e.preventDefault();
+    // Change UI
+    this.updateBtn.current.value = "Updating...";
+    this.updateBtn.current.focus();
 
+    // Update in Airtable
     const airtable = new Airtable({
       apiKey: process.env.AIRTABLE_API_KEY,
     });
 
-    airtable
+    const records = await airtable
       .base(process.env.AIRTABLE_BASE_ID)("Team Members ")
-      .update(
-        [
-          {
-            id: this.state.id,
-            fields: {
-              Name: this.state.name,
-              // "Photo": [
-              //   {
-              //     "id": "att1ad0TKWelqBmCq"
-              //   }
-              // ],
-              Role: this.state.role,
-              Twitter: this.state.twitter,
-              LinkedIn: this.state.linkedIn,
-            },
+      .update([
+        {
+          id: this.state.id,
+          fields: {
+            Name: this.state.name,
+            Photo: [
+              {
+                url: this.state.image,
+              },
+            ],
+            Role: this.state.role,
+            Twitter: this.state.twitter,
+            LinkedIn: this.state.linkedIn,
           },
-        ],
-        function (err, records) {
-          if (err) {
-            console.error(err);
-            return;
-          }
-          records.forEach(function (record) {
-            console.log(record.get("Name"));
-          });
-        }
-      );
+        },
+      ]);
+
+    // Change UI to indicate success // TODO: indicate failure 
+    this.updateBtn.current.value = "Updated!";
+    setTimeout(() => {
+      this.updateBtn.current.blur();
+      this.updateBtn.current.value="Update"
+    }, 3000);
   }
   handleDelete() {
-    // Delete from Team Members DB
-    // Delete teamMember Id from team field in Startups DB
-    this.props.onDelete(this.props.id);
+    // Change UI
+    this.deleteBtn.current.focus();
+    this.deleteBtn.current.value = "Deleted!";
+    // Delete team member and reset UI after 3 secs
+    setTimeout(() => {
+      this.deleteBtn.current.blur();
+      this.deleteBtn.current.value="Delete"
+      this.props.onDelete(this.props.id);
+    }, 3000);
   }
   render() {
     return (
@@ -113,32 +121,29 @@ class EditTeamMemberForm extends React.Component {
           <div className="mt-1 sm:mt-0 sm:col-span-2">
             <div className="flex items-center">
               <span className="h-12 w-12 rounded-full overflow-hidden bg-gray-100">
-                {/* TODO: handle what is displayed when there is no image */}
-
-                <img src={this.props.image} />
-                {/* <svg
-                          className="h-full w-full text-gray-300"
-                          fill="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg> */}
+                <ProfileImage imageURL={this.state.image} />
               </span>
-              {/* <input className="hidden" type="file" onChange={onFileChange} ref={input => this.inputElement = input}/>  */}
-              <FileUpload />
+              <FileUpload
+                currentImage={this.state.image}
+                onChange={(imageURL) => {
+                  this.setState({ image: imageURL });
+                }}
+              />
             </div>
           </div>
         </div>
         <div className="pb-6 flex justify-end">
           <input
             type="submit"
-            className="block py-2 px-4 rounded shadow-lg float-right font-semibold mr-2 cursor-pointer bg-teal-500 text-white hover:bg-teal-600"
+            className="focus:bg-gray-600 block py-2 px-4 rounded shadow-lg float-right font-semibold mr-2 cursor-pointer bg-teal-500 text-white hover:bg-teal-600"
             value="Update"
+            ref={this.updateBtn}
           />
           <button
-            className="block py-2 px-4 rounded shadow-lg float-right font-semibold mr-2 cursor-pointer bg-teal-500 text-white hover:bg-teal-600"
+            className="focus:bg-gray-600 block py-2 px-4 rounded shadow-lg float-right font-semibold mr-2 cursor-pointer bg-teal-500 text-white hover:bg-teal-600"
             onClick={this.handleDelete}
             type="button"
+            ref={this.deleteBtn}
           >
             Delete
           </button>

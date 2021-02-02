@@ -3,9 +3,17 @@ import Airtable from "airtable";
 import Header from "../../src/components/Header";
 import Footer from "../../src/components/Footer";
 import TeamMember from "../../src/components/TeamMember";
+import {
+  InstagramIcon,
+  LinkedInIcon,
+  TwitterIcon,
+  FacebookIcon,
+  GlobeIcon,
+  MailIcon
+} from "../../public/icons";
 
 const airtable = new Airtable({
-  apiKey: process.env.AIRTABLE_API_KEY
+  apiKey: process.env.AIRTABLE_API_KEY,
 });
 
 export async function getStaticPaths() {
@@ -37,20 +45,25 @@ export async function getStaticProps({ params }) {
     .all();
 
   const startup = {
-      name: records[0].get("Name") || "",
-      slug: records[0].get("Slug") || "",
-      image: records[0].get("Photo") ? records[0].get("Photo")[0].url : "",
-      city: records[0].get("City") || "",
-      country: records[0].get("Country") || "",
-      description: records[0].get("Short Description") || "",
-      themes: records[0].get("Themes") || [],
-      problem: records[0].get("Problem") || "",
-      solution: records[0].get("Solution") || "",
-      different: records[0].get("Different") || "",
-      achievement: records[0].get("Achievement") || "",
-      website: records[0].get("Website") || "",
-      team: await getTeamMembers(records[0].get("Name")) || ""
-    };
+    name: records[0].get("Name") || "",
+    slug: records[0].get("Slug") || "",
+    image: records[0].get("Photo") ? records[0].get("Photo")[0].url : "",
+    city: records[0].get("City") || "",
+    country: records[0].get("Country") || "",
+    description: records[0].get("Short Description") || "",
+    themes: records[0].get("Themes") || [],
+    problem: records[0].get("Problem") || "",
+    solution: records[0].get("Solution") || "",
+    different: records[0].get("Different") || "",
+    achievement: records[0].get("Achievement") || "",
+    website: records[0].get("Website") || "",
+    team: (await getTeamMembers(records[0].get("Name"))) || "",
+    linkedIn: records[0].get("LinkedIn") || "",
+    email: records[0].get("Email") || "",
+    twitter: records[0].get("Twitter") || "",
+    instagram: records[0].get("Instagram") || "",
+    facebook: records[0].get("Facebook") || "",
+  };
   return {
     props: { startup },
   };
@@ -63,21 +76,21 @@ export async function getTeamMembers(startup) {
       fields: ["Name", "Role", "Photo", "Twitter", "LinkedIn"],
       filterByFormula: `Startup="${startup}"`,
     })
-    .all()
-    const teamMembers = records.map((member) => {
-      return {
-        name: member.get("Name"),
-        role: member.get("Role"),
-        image: member.get("Photo") ? member.get("Photo")[0].url : "",
-        twitter: member.get("Twitter") || null,
-        linkedIn: member.get("LinkedIn") || null,
-      };
-    });
+    .all();
+  const teamMembers = records.map((member) => {
+    return {
+      name: member.get("Name"),
+      role: member.get("Role"),
+      image: member.get("Photo") ? member.get("Photo")[0].url : "",
+      twitter: member.get("Twitter") || null,
+      linkedIn: member.get("LinkedIn") || null,
+    };
+  });
 
-    return teamMembers;
+  return teamMembers;
 }
 
-export default function StartupProfile({ startup } ) {
+export default function StartupProfile({ startup }) {
   return (
     <div>
       <Header height="36" />
@@ -98,13 +111,51 @@ export default function StartupProfile({ startup } ) {
                       {startup.city + ", " + startup.country}
                     </p>
                     <p className="pt-4">{startup.description}</p>
-                    {/* <ul>
-                      <li>
-                          <a href="https://www.ag-energy.com.au/">
-                              // TODO: Social bar/symbols
+                    <ul className="pt-4 text-teal-500 flex items-center">
+                      {/* CURRENTLYDOING: If link exists, render out icon as list item */}
+                      {startup.website ? (
+                        <li className="px-3">
+                          <a href={startup.website}>
+                            <GlobeIcon width="6"/>
                           </a>
-                      </li>
-                  </ul> */}
+                        </li>
+                      ) : null}
+                      {startup.email ? (
+                        <li className="px-3">
+                          <a href={`mailto:${startup.email}`}>
+                            <MailIcon width="6"/>
+                          </a>
+                        </li>
+                      ) : null}
+                      {startup.linkedIn ? (
+                        <li className="px-3">
+                          <a href={startup.linkedIn}>
+                            <LinkedInIcon width="6"/>
+                          </a>
+                        </li>
+                      ) : null}
+                      {startup.twitter ? (
+                        <li className="px-3">
+                          <a href={startup.twitter}>
+                            <TwitterIcon width="6"/>
+                          </a>
+                        </li>
+                      ) : null}
+                      {startup.instagram ? (
+                        <li className="px-3">
+                          <a href={startup.instagram}>
+                            <InstagramIcon width="6"/>
+                          </a>
+                        </li>
+                      ) : null}
+                      {startup.facebook ? (
+                        <li className="px-3">
+                          <a href={startup.facebook}>
+                            <FacebookIcon width="6"/>
+                          </a>
+                        </li>
+                      ) : null}
+                    </ul>
                   </div>
                 </div>
               </div>
@@ -112,9 +163,7 @@ export default function StartupProfile({ startup } ) {
             <div className="w-full px-4 pt-8 md:w-full lg:w-3/5 xl:w-2/3 lg:pt-0">
               <div className="px-8 py-12 bg-white rounded-lg shadow md:p-12">
                 <div>
-                  <h3 className="profile-heading">
-                    The problem we're solving
-                  </h3>
+                  <h3 className="profile-heading">The problem we're solving</h3>
                   <p className="pb-8 text-lg">{startup.problem}</p>
                 </div>
                 <div>
@@ -122,39 +171,39 @@ export default function StartupProfile({ startup } ) {
                   <p className="pb-8 text-lg">{startup.solution}</p>
                 </div>
                 <div>
-                  <h3 className="profile-heading">
-                    Our differentiator:
-                  </h3>
+                  <h3 className="profile-heading">Our differentiator:</h3>
                   <p className="pb-8 text-lg">{startup.different}</p>
                 </div>
                 <div>
-                  <h3 className="profile-heading">
-                    Biggest achievement:
-                  </h3>
+                  <h3 className="profile-heading">Biggest achievement:</h3>
                   <p className="pb-8 text-lg">{startup.achievement}</p>
                 </div>
                 <div>
-                  <h3 className="profile-heading">
-                    Program themes:
-                  </h3>
+                  <h3 className="profile-heading">Program themes:</h3>
                   {startup.themes.map((theme) => {
-                    return <span key={theme} className="tag mb-3 mr-2">{theme}</span>
+                    return (
+                      <span key={theme} className="tag mb-3 mr-2">
+                        {theme}
+                      </span>
+                    );
                   })}
                 </div>
                 <div>
                   <h3 className="profile-heading">
                     Team members:
                     <div className="flex flex-wrap pt-4">
-                    {startup.team.map((teamMember) => {
-                    return <TeamMember
-                      key={teamMember.name}
-                      name={teamMember.name}
-                      role={teamMember.role}
-                      img={teamMember.image}
-                      linkedin={teamMember.linkedIn}
-                      twitter={teamMember.twitter}
-                    />
-                  })}
+                      {startup.team.map((teamMember) => {
+                        return (
+                          <TeamMember
+                            key={teamMember.name}
+                            name={teamMember.name}
+                            role={teamMember.role}
+                            img={teamMember.image}
+                            linkedin={teamMember.linkedIn}
+                            twitter={teamMember.twitter}
+                          />
+                        );
+                      })}
                     </div>
                   </h3>
                 </div>

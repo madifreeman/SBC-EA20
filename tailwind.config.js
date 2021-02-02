@@ -7,7 +7,7 @@ module.exports = {
     extend: {},
   },
   variants: {
-    extend: {opacity: ['disabled'],},
+    extend: {opacity: ['disabled', 'hover'],},
   },
   plugins: [],
   theme: {

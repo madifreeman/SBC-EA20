@@ -2,7 +2,6 @@ import React from "react";
 
 class TextInput extends React.Component {
   constructor(props) {
-    console.log(props)
     super(props);
     this.state = {value: props.fieldValue};
 
@@ -27,6 +26,7 @@ class TextInput extends React.Component {
             value={this.state.value}
             className="input"
             onChange={this.handleChange}
+            required={this.props.isRequired}
           />
         </div>
       );
@@ -40,6 +40,7 @@ class TextInput extends React.Component {
           className="input"
           maxLength={props.maxLength}
           onChange={this.handleChange}
+          required={this.props.isRequired}
         ></textarea>
       );
     }

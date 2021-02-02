@@ -1,6 +1,7 @@
 import React from "react";
 import FileUpload from "../../src/components/FileUpload";
 import TextInput from "../../src/components/TextInput";
+import ProfileImage from "../../src/components/ProfileImage";
 import Airtable from "airtable";
 
 class AddTeamMemberForm extends React.Component {
@@ -14,7 +15,7 @@ class AddTeamMemberForm extends React.Component {
       role: "",
       linkedIn: "",
       twitter: "",
-      photo: "",
+      image: "",
     };
     this.state = this.baseState;
   }
@@ -31,7 +32,11 @@ class AddTeamMemberForm extends React.Component {
         {
           fields: {
             Name: this.state.name,
-            Photo: "",
+            Photo: [
+              {
+                "url": this.state.image
+              }
+            ],
             Role: this.state.role,
             Twitter: this.state.twitter,
             LinkedIn: this.state.linkedIn,
@@ -43,7 +48,7 @@ class AddTeamMemberForm extends React.Component {
       id: records[0].getId(),
       name: records[0].get("Name"),
       role: records[0].get("Role"),
-      image: records[0].get("Photo") ? member.get("Photo")[0].url : "",
+      image: records[0].get("Photo") ? records[0].get("Photo")[0].url : "",
       twitter: records[0].get("Twitter") || "",
       linkedIn: records[0].get("LinkedIn") || "",
     };
@@ -54,6 +59,7 @@ class AddTeamMemberForm extends React.Component {
       this.props.onAdd(newTeamMember);
     }, 500);
   }
+
 
   render() {
     return (
@@ -122,18 +128,14 @@ class AddTeamMemberForm extends React.Component {
             <div className="flex items-center">
               <span className="h-12 w-12 rounded-full overflow-hidden bg-gray-100">
                 {/* TODO: handle what is displayed when there is no image */}
-
-                <img src="" />
-                {/* <svg
-                          className="h-full w-full text-gray-300"
-                          fill="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg> */}
+                <ProfileImage imageURL={this.state.image} />
               </span>
-              {/* <input className="hidden" type="file" onChange={onFileChange} ref={input => this.inputElement = input}/>  */}
-              <FileUpload />
+              <FileUpload
+                  currentImage={this.state.image}
+                  onChange={(imageURL) => {
+                    this.setState({image: imageURL});
+                  }}
+                />
             </div>
           </div>
         </div>

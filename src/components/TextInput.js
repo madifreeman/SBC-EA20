@@ -12,7 +12,7 @@ class TextInput extends React.Component {
 
   handleChange(event) {
     this.setState({value: event.target.value});
-    this.props.onChange(event.target.value);
+    // this.props.onChange(event.target.value);
   }
 
   inputField(props) {
@@ -21,20 +21,21 @@ class TextInput extends React.Component {
         <div className=" flex rounded-md shadow-sm">
           <input
             type="text"
-            name={this.props.fieldName}
-            id={this.props.fieldName}
+            name={this.props.fieldId}
+            id={this.props.fieldId}
             value={this.state.value}
             className="input"
             onChange={this.handleChange}
             required={this.props.isRequired}
+            ref={this.props.rhfRef}
           />
         </div>
       );
     } else if (props.inputType === "long") {
       return (
         <textarea
-          id={this.props.fieldName}
-          name={this.props.fieldName}
+          id={this.props.fieldId}
+          name={this.props.fieldId}
           rows="3"
           value={this.state.value}
           className="input"

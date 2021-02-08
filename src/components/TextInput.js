@@ -42,12 +42,15 @@ class TextInput extends React.Component {
           maxLength={props.maxLength}
           onChange={this.handleChange}
           required={this.props.isRequired}
+          ref={this.props.rhfRef}
         ></textarea>
       );
     }
   }
   
   render() {
+    // this.props.fieldName --> the label for the input field displayed on UI
+    // this.props.fieldId --> the name of the field in airtable (to be used when airtable needs to be updated)
     function Required(props) {
       if (props.isRequired) {
         return <span className="text-red-600"> *</span>;

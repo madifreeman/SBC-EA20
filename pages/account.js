@@ -34,8 +34,8 @@ export async function getStaticProps() {
 
 export default function Account({mentor}) {
   const tables = [
-    { key: "1", date: "Wed 4th", month: "December", tableNo: "20" },
-    { key: "2", date: "Thu 5th", month: "December", tableNo: "20" },
+    { date: "Wed 4th", month: "December", tableNo: "20" },
+    { date: "Thu 5th", month: "December", tableNo: "20" },
   ];
   return (
     <div>

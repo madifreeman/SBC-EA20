@@ -92,16 +92,6 @@ class EditStartup extends React.Component {
   }
 
   handleTeamMemberDelete(teamMemberId) {
-    // Remove team member from DB
-    airtable
-      .base(process.env.AIRTABLE_BASE_ID)("Team Members")
-      .destroy([teamMemberId]),
-      function (err, deletedRecords) {
-        if (err) {
-          console.error(err);
-          return;
-        }
-      };
     // Remove team member from state
     const newTeam = { ...this.state.team };
     delete newTeam[teamMemberId];
@@ -170,7 +160,6 @@ class EditStartup extends React.Component {
                       onAdd={(teamMember) => {
                         const newTeam = { ...this.state.team };
                         newTeam[teamMember.id] = teamMember;
-                        console.log("newTeam", newTeam)
                         this.setState({ team: newTeam });
                         this.setState({ addingTeamMember: false });
                       }}

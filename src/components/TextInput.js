@@ -51,13 +51,6 @@ class TextInput extends React.Component {
   render() {
     // this.props.fieldName --> the label for the input field displayed on UI
     // this.props.fieldId --> the name of the field in airtable (to be used when airtable needs to be updated)
-    function Required(props) {
-      if (props.isRequired) {
-        return <span className="text-red-600"> *</span>;
-      }
-      return <span className="text-gray-500 text-xs font-normal"> (optional)</span>
-    
-    }
     return (
       <div className="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:border-t sm:border-gray-200 sm:pt-5">
         <label
@@ -65,7 +58,7 @@ class TextInput extends React.Component {
           className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
         >
           {this.props.fieldName}
-          <Required isRequired={this.props.isRequired} />
+          {this.props.isRequired ? <span className="text-red-600"> *</span> : <span className="text-gray-500 text-xs font-normal"> (optional)</span>}
         </label>
         <div className="mt-1 sm:mt-0 sm:col-span-2">
           <this.inputField

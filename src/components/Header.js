@@ -30,7 +30,7 @@ class Header extends React.Component {
         <div className="flex-grow block flex w-auto">
           <div className="font-semibold flex-grow">
             {this.menuItems.map((menuItem) => (
-              <Link href={menuItem.link}>
+              <Link href={menuItem.link} key={menuItem.name}>
               <a
                 className="block inline-block mt-0 text-teal-200 hover:bg-teal-500 hover:text-white mx-2 px-4 py-2 rounded hover:shadow-lg "
               >
@@ -66,7 +66,7 @@ class Header extends React.Component {
         <div className="mx-4 bg-white rounded-lg text-teal-600">
           <div className="relative text-gray-800  bg-white rounded-lg text-teal-600">
           {this.menuItems.concat(this.loginItem).map((menuItem) => (
-            <Link href={menuItem.link}>
+            <Link href={menuItem.link} key={menuItem.name}>
             <a className="block px-4 py-4 font-semibold rounded-lg border border-gray-100 hover:bg-gray-100 ">
               {menuItem.name}
             </a>

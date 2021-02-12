@@ -52,19 +52,20 @@ export default function EditMentor({ mentor }) {
         url: data.Photo,
       },
     ];
-
+    console.log(data)
+    // TODO: Which table is this info going to? Mentors are RSVP'd
     // Send changes to airtable
-    const airtable = new Airtable({
-      apiKey: process.env.AIRTABLE_API_KEY,
-    });
-    const records = await airtable
-      .base(process.env.AIRTABLE_BASE_ID)("Mentors")
-      .update([
-        {
-          id: mentor.id,
-          fields: data,
-        },
-      ]);
+    // const airtable = new Airtable({
+    //   apiKey: process.env.AIRTABLE_API_KEY,
+    // });
+    // const records = await airtable
+    //   .base(process.env.AIRTABLE_BASE_ID)("Mentors")
+    //   .update([
+    //     {
+    //       id: mentor.id,
+    //       fields: data,
+    //     },
+    //   ]);
 
     // Update UI to indicate success
     // TODO: Indicate failure
@@ -74,7 +75,7 @@ export default function EditMentor({ mentor }) {
 
   const updateButtonRef = useRef(null);
   const { register, handleSubmit, watch, errors } = useForm();
-  const onSubmit = (data) => console.log(data);
+  const onSubmit = (data) => submitToAirtable(data);
 
   const programs = [
     "Smart Energy",
@@ -277,7 +278,7 @@ export default function EditMentor({ mentor }) {
                   fieldValue={mentor.dietary}
                   isRequired={false}
                   fieldDescription="Used for internal purposes only."
-                  inputType="short"
+                  inputType="long"
                   rhfRef={register}
                 />
               </div>

@@ -112,7 +112,6 @@ export default function StartupProfile({ startup }) {
                     </p>
                     <p className="pt-4">{startup.description}</p>
                     <ul className="pt-4 text-teal-500 flex items-center">
-                      {/* CURRENTLYDOING: If link exists, render out icon as list item */}
                       {startup.website ? (
                         <li className="px-3">
                           <a href={startup.website}>

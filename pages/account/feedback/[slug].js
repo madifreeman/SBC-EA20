@@ -4,7 +4,7 @@ import Header from "../../../src/components/Header";
 import Footer from "../../../src/components/Footer";
 import { useForm } from "react-hook-form";
 import React, { useRef } from "react";
-import CustomizedSlider from "../../../src/components/FeedbackSlider";
+import FeedbackSlider from "../../../src/components/FeedbackSlider";
 import { Slider } from "@material-ui/core";
 
 const airtable = new Airtable({
@@ -83,7 +83,7 @@ class FieldTitle extends React.Component {
   }
 }
 
-class RadioButtons extends React.Component {
+class RadioButtonsField extends React.Component {
   render() {
     return (
       <fieldset className="my-6" name={this.props.fieldName}>
@@ -112,7 +112,7 @@ class RadioButtons extends React.Component {
   }
 }
 
-class LongTextInput extends React.Component {
+class LongTextField extends React.Component {
   render() {
     return (
       <div className="my-6">
@@ -131,7 +131,7 @@ class LongTextInput extends React.Component {
   }
 }
 
-class SliderFieldInput extends React.Component {
+class SliderField extends React.Component {
   render() {
     return (
       <div className="my-6">
@@ -140,7 +140,7 @@ class SliderFieldInput extends React.Component {
           required={this.props.required}
         />
         <div className="w-full mt-10 px-2 py-2">
-          <CustomizedSlider rhfRef={this.props.rhfRef} fieldId={this.props.fieldId} />
+          <FeedbackSlider rhfRef={this.props.rhfRef} fieldId={this.props.fieldId} />
           <div className="pt-4 flex justify-between font-semibold text-gray-600">
             <small>{this.props.minName}</small>
             <small>{this.props.maxName}</small>
@@ -194,7 +194,7 @@ export default function LeaveFeedback({ startup }) {
                   <form className="pt-2" onSubmit={handleSubmit(onSubmit)}>
                     <div className="pt-4">
                       <SectionHeading heading="Team & Ability" />
-                      <SliderFieldInput
+                      <SliderField
                         fieldName="Does the team have in-depth industry knowledge?"
                         fieldId="knowledge"
                         minName="Little Knowledge"
@@ -202,7 +202,7 @@ export default function LeaveFeedback({ startup }) {
                         rhfRef={register}
                         required={true}
                       />
-                      <SliderFieldInput
+                      <SliderField
                         fieldName="Does the team have the passion and vision to make their idea successful?"
                         fieldId="passion"
                         minName="Low passion"
@@ -210,7 +210,7 @@ export default function LeaveFeedback({ startup }) {
                         rhfRef={register}
                         required={true}
                       />
-                      <SliderFieldInput
+                      <SliderField
                         fieldName="Does this team have the ability to deliver their idea?"
                         fieldId="ability"
                         minName="Low ability"
@@ -222,7 +222,7 @@ export default function LeaveFeedback({ startup }) {
 
                     <div className="pt-8">
                       <SectionHeading heading="Market & Product" />
-                      <SliderFieldInput
+                      <SliderField
                         fieldName="How big is the teams potential market?"
                         fieldId="market"
                         minName="Local Scale"
@@ -230,7 +230,7 @@ export default function LeaveFeedback({ startup }) {
                         rhfRef={register}
                         required={true}
                       />
-                      <SliderFieldInput
+                      <SliderField
                         fieldName="Is the market competitive?"
                         fieldId="competitive"
                         minName="Many competitors"
@@ -238,7 +238,7 @@ export default function LeaveFeedback({ startup }) {
                         rhfRef={register}
                         required={true}
                       />
-                      <RadioButtons
+                      <RadioButtonsField
                         fieldName="What do you think of this team's product or service?"
                         fieldId="product"
                         options={["Very good", "Average", "Weak"]}
@@ -249,7 +249,7 @@ export default function LeaveFeedback({ startup }) {
 
                     <div className="pt-8">
                       <SectionHeading heading="Execution Power" />
-                      <SliderFieldInput
+                      <SliderField
                         fieldName="How much market traction does the team have?"
                         fieldId="traction"
                         minName="No users/customers"
@@ -257,7 +257,7 @@ export default function LeaveFeedback({ startup }) {
                         rhfRef={register}
                         required={true}
                       />
-                      <SliderFieldInput
+                      <SliderField
                         fieldName="How strong is the team's branding and story?"
                         fieldId="marketing"
                         minName="Very Weak"
@@ -265,7 +265,7 @@ export default function LeaveFeedback({ startup }) {
                         rhfRef={register}
                         required={true}
                       />
-                      <SliderFieldInput
+                      <SliderField
                         fieldName="How strong is the team's presentation skills?"
                         fieldId="presentation"
                         minName="Very Weak"
@@ -277,7 +277,7 @@ export default function LeaveFeedback({ startup }) {
 
                     <div className="pt-8">
                       <SectionHeading heading="Strategic & Funding" />
-                      <RadioButtons
+                      <RadioButtonsField
                         fieldName="Would you invest in this startup?"
                         fieldId="invest"
                         options={[
@@ -288,14 +288,14 @@ export default function LeaveFeedback({ startup }) {
                         required={true}
                         rhfRef={register}
                       />
-                      <RadioButtons
+                      <RadioButtonsField
                         fieldName="Do you want to mentor this startup during the upcoming program?"
                         fieldId="mentoring"
                         options={["Yes", "No"]}
                         required={true}
                         rhfRef={register}
                       />
-                      <LongTextInput
+                      <LongTextField
                         fieldName="Are there any companies and/or people you'd like to connect this startup with?"
                         fieldId="connect"
                         required={false}
@@ -305,13 +305,13 @@ export default function LeaveFeedback({ startup }) {
 
                     <div className="pt-8">
                       <SectionHeading heading="Feedback" />
-                      <LongTextInput
+                      <LongTextField
                         fieldName="Do you have any comments you'd like to share with the startup?"
                         fieldId="comments"
                         required={false}
                         rhfRef={register}
                       />
-                      <RadioButtons
+                      <RadioButtonsField
                         fieldName="Your above feedback will be shared with the startup. Would you like to make it anonymous?"
                         fieldId="anonymous"
                         options={["Yes", "No"]}
@@ -325,7 +325,7 @@ export default function LeaveFeedback({ startup }) {
                         heading="Concerns"
                         description="The information you enter below will remain private and WILL NOT be shared with the startup."
                       />
-                      <LongTextInput
+                      <LongTextField
                         fieldName="Did this startup raise any red flags with you? If so, please explain?"
                         fieldId="concerns"
                         required={false}

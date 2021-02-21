@@ -3,17 +3,11 @@ import React from "react";
 class TextInput extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {value: props.fieldValue};
-
-    this.handleChange = this.handleChange.bind(this);
+    // this.state = {value: props.fieldValue};
     this.inputField = this.inputField.bind(this);
-    // this.handleSubmit = this.handleSubmit.bind(this);
   }
 
-  handleChange(event) {
-    this.setState({value: event.target.value});
-    // this.props.onChange(event.target.value);
-  }
+
 
   inputField(props) {
     if (props.inputType === "short") {
@@ -23,8 +17,8 @@ class TextInput extends React.Component {
             type="text"
             name={this.props.fieldId}
             id={this.props.fieldId}
-            value={this.state.value}
             className="input"
+            defaultValue={this.props.fieldValue}
             onChange={this.handleChange}
             required={this.props.isRequired}
             ref={this.props.rhfRef}
@@ -37,8 +31,8 @@ class TextInput extends React.Component {
           id={this.props.fieldId}
           name={this.props.fieldId}
           rows="3"
-          value={this.state.value}
           className="input"
+          defaultValue={this.props.fieldValue}
           maxLength={props.maxLength}
           onChange={this.handleChange}
           required={this.props.isRequired}

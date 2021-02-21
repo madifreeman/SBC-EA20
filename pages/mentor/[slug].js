@@ -1,57 +1,55 @@
 import React from "react";
-import Airtable from "airtable";
 import Header from "../../src/components/Header";
 import Footer from "../../src/components/Footer";
 import { LinkedInIcon } from "../../public/icons";
-
-const airtable = new Airtable({
-  apiKey: process.env.AIRTABLE_API_KEY
-});
+import { q, client } from "../../src/fauna";
 
 export async function getStaticPaths() {
-  const records = await airtable
-    .base(process.env.AIRTABLE_BASE_ID)("Mentors")
-    .select({
-      fields: ["Slug"],
-    })
-    .all();
-  const paths = records.map((record) => {
+  const results = await client
+    .query(
+      q.Map(
+        q.Paginate(q.Documents(q.Collection("Mentors"))),
+        q.Lambda("mentorRef", q.Let(
+          {
+            mentorDoc: q.Get(q.Var("mentorRef"))
+          }, 
+          {
+            slug: q.Select(["data", "slug"], q.Var("mentorDoc")),
+          }
+        ))
+      )
+    )
+  
+  const paths = results.data.map((record) => {
     return {
       params: {
-        slug: record.get("Slug"),
+        slug: record.slug
       },
     };
   });
+  
   return {
     paths,
     fallback: false,
   };
 }
 
-export async function getStaticProps({ params }) {
-  const records = await airtable
-    .base("appzJwVbIs7gBM2fm")("Mentors")
-    .select({
-      filterByFormula: `Slug="${params.slug}"`,
-    })
-    .all();
 
-  const mentor = {
-    name: records[0].get("Name"),
-    slug: records[0].get("Slug"),
-    image: records[0].get("Photo")[0].url,
-    company: records[0].get("Company"),
-    role: records[0].get("Role"),
-    city: records[0].get("City") || "",
-    country: records[0].get("Country") || "",
-    linkedIn: records[0].get("LinkedIn") || "",
-    bio: records[0].get("Bio"),
-    // day1Table: records[0].get("Day 1 Table"),
-    // day2Table: records[0].get("Day 2 Table"),
-    expertise: records[0].get("Expertise"),
-  };
+export async function getStaticProps({ params }) {
+  const results = await client.query(
+    q.Map(
+      q.Paginate(q.Match(q.Index("mentors_by_slug"), params.slug)),
+      q.Lambda("mentorRef", q.Get(q.Var("mentorRef")))
+    )
+  );
+
+  const mentor = results.data[0].data
+  mentor.id = results.data[0].ref.id
+
   return {
-    props: { mentor },
+    props: {
+      mentor,
+    },
   };
 }
 

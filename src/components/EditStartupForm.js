@@ -2,11 +2,12 @@ import TextInput from "../../src/components/TextInput";
 import FileUpload from "../../src/components/FileUpload";
 import { useForm } from "react-hook-form";
 import React, { useRef } from "react";
+import { q, client } from "../../src/fauna";
 
 export default function EditStartupForm(props) {
-  const { register, handleSubmit, watch, errors } = useForm();
+  const { register, handleSubmit} = useForm();
 
-  const onSubmit = (data) => submitToAirtable(data);
+  const onSubmit = (data) => submitToFauna(data);
   const updateButtonRef = useRef(null);
   const themes = [
     "Electric Mobility",
@@ -18,28 +19,22 @@ export default function EditStartupForm(props) {
     "Other",
   ];
 
-  async function submitToAirtable(data) {
+
+  async function submitToFauna(data) {
     updateButtonRef.current.value = "Updating...";
 
-    // Change photo field to format accepted by airtable
-    data.Photo = [
-      {
-        url: data.Photo,
-      },
-    ];
 
-    // Send changes to airtable 
-    const airtable = new Airtable({
-        apiKey: process.env.AIRTABLE_API_KEY,
-      });
-    const records = await airtable
-      .base(process.env.AIRTABLE_BASE_ID)("Startups")
-      .update([
+    // Send changes to fauna
+    const results = await client.query(
+      q.Update(
+        q.Ref(q.Collection("Startups"), props.startup.id),
         {
-          id: this.state.startup.id,
-          fields: data,
-        },
-      ]);
+          data: data
+        }
+      )
+    ) 
+
+    console.log(results)
 
     // Update UI to indicate success 
     // TODO: Indicate failure 
@@ -68,7 +63,7 @@ export default function EditStartupForm(props) {
           <div className="mt-6 sm:mt-5 space-y-6 sm:space-y-5">
             <TextInput
               fieldName="Name"
-              fieldId="Name"
+              fieldId="name"
               fieldValue={props.startup.name}
               isRequired={true}
               inputType="short"
@@ -76,7 +71,7 @@ export default function EditStartupForm(props) {
             />
             <TextInput
               fieldName="City"
-              fieldId="City"
+              fieldId="city"
               fieldValue={props.startup.city}
               isRequired={true}
               fieldDescription="What city is your startup primarily located in?"
@@ -85,7 +80,7 @@ export default function EditStartupForm(props) {
             />
             <TextInput
               fieldName="Country"
-              fieldId="Country"
+              fieldId="country"
               fieldValue={props.startup.country}
               isRequired={true}
               fieldDescription="What country is your startup primarily located in?"
@@ -95,7 +90,7 @@ export default function EditStartupForm(props) {
             />
             <TextInput
               fieldName="Short Description"
-              fieldId="Short Description"
+              fieldId="description"
               fieldValue={props.startup.description}
               isRequired={true}
               fieldDescription="Max 150 characters."
@@ -105,7 +100,7 @@ export default function EditStartupForm(props) {
             />
             <TextInput
               fieldName="The Problem"
-              fieldId="Problem"
+              fieldId="problem"
               fieldValue={props.startup.problem}
               isRequired={true}
               fieldDescription="What is the problem that your startup is solving? Max 500 characters."
@@ -115,7 +110,7 @@ export default function EditStartupForm(props) {
             />
             <TextInput
               fieldName="The Solution"
-              fieldId="Solution"
+              fieldId="solution"
               fieldValue={props.startup.solution}
               isRequired={true}
               fieldDescription="What is your startup's solution to this problem? Max 500 characters."
@@ -125,7 +120,7 @@ export default function EditStartupForm(props) {
             />
             <TextInput
               fieldName="Your Differentiator"
-              fieldId="Different"
+              fieldId="different"
               fieldValue={props.startup.different}
               isRequired={true}
               fieldDescription="How is your startup different to existing solutions? Max 500 characters."
@@ -135,7 +130,7 @@ export default function EditStartupForm(props) {
             />
             <TextInput
               fieldName="Biggest Achievment"
-              fieldId="Achievement"
+              fieldId="achievement"
               fieldValue={props.startup.achievement}
               isRequired={true}
               fieldDescription="What is your startup's biggest achievement to date? Max 500 characters."
@@ -159,12 +154,12 @@ export default function EditStartupForm(props) {
                 <fieldset>
                   {themes.map((theme) => {
                     return (
-                      <div className="mt-1">
+                      <div className="mt-1" key={theme}>
                         <label className="inline-flex items-center cursor-pointer">
                           <input
                             type="checkbox"
                             className="w-4 h-4 text-teal-500 cursor-pointer form-checkbox"
-                            name="Themes"
+                            name="themes"
                             value={theme}
                             defaultChecked={
                               props.startup.themes.includes(theme)
@@ -183,7 +178,7 @@ export default function EditStartupForm(props) {
             </div>
             <TextInput
               fieldName="Website"
-              fieldId="Website"
+              fieldId="website"
               fieldValue={props.startup.website}
               isRequired={false}
               fieldDescription="What is the url of your startup's website?"
@@ -192,7 +187,7 @@ export default function EditStartupForm(props) {
             />
             <TextInput
               fieldName="Contact Email"
-              fieldId="Email"
+              fieldId="email"
               fieldValue={props.startup.email}
               isRequired={false}
               fieldDescription="What is your startup's generic email? Eg. hello@, info@"
@@ -201,7 +196,7 @@ export default function EditStartupForm(props) {
             />
             <TextInput
               fieldName="LinkedIn"
-              fieldId="LinkedIn"
+              fieldId="linkedIn"
               fieldValue={props.startup.linkedIn}
               isRequired={false}
               fieldDescription="What is the url of your startup's LinkedIn profile?"
@@ -210,7 +205,7 @@ export default function EditStartupForm(props) {
             />
             <TextInput
               fieldName="Twitter"
-              fieldId="Twitter"
+              fieldId="twitter"
               fieldValue={props.startup.twitter}
               isRequired={false}
               fieldDescription="What is the url of your startup's Twitter profile?"
@@ -219,7 +214,7 @@ export default function EditStartupForm(props) {
             />
             <TextInput
               fieldName="Facebook"
-              fieldId="Facebook"
+              fieldId="facebook"
               fieldValue={props.startup.facebook}
               isRequired={false}
               fieldDescription="What is the url of your startup's Facebook profile?"

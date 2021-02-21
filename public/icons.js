@@ -139,7 +139,7 @@ export class GlobeIcon extends React.Component {
         aria-hidden="true"
         data-prefix="fas"
         data-icon="globe"
-        class={`svg-inline--fa fa-globe fa-w-16 w-${this.props.width || 6}`}
+        className={`svg-inline--fa fa-globe fa-w-16 w-${this.props.width || 6}`}
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 496 512"
       >
@@ -159,7 +159,7 @@ export class MailIcon extends React.Component {
         aria-hidden="true"
         data-prefix="fas"
         data-icon="envelope"
-        class={`svg-inline--fa fa-envelope fa-w-16 w-${this.props.width || 6}`}
+        className={`svg-inline--fa fa-envelope fa-w-16 w-${this.props.width || 6}`}
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 512 512"
       >

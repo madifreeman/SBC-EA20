@@ -1,13 +1,11 @@
-import { useState } from "react";
 import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
 
 export default function FeedbackSlider(props) {
-  const [value, setValue] = useState(0);
   const SliderWithTooltip = Slider.createSliderWithTooltip(Slider);
 
   function handleOnChange(v) {
-    setValue(v)  
+    props.rhfSetValue(props.fieldId, v)
   }
 
   return (
@@ -24,9 +22,6 @@ export default function FeedbackSlider(props) {
           backgroundColor: "white",
         }}
         onAfterChange={handleOnChange}
-        defaultValue={value} // component re-renders onAfterChange(because state is being set)
-                            // on re-render, slider gets set back to default value - so default value
-                            // needs to be set as state 
         min={0}
         max={10}
         tipProps={{visible: true}}
@@ -34,7 +29,7 @@ export default function FeedbackSlider(props) {
       <input
         ref={props.rhfRef}
         name={props.fieldId}
-        value={value}
+        type="number"
         className="hidden"
         onChange={() => console.log(value)}
       />

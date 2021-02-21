@@ -5,7 +5,7 @@ class FileUpload extends React.Component {
   constructor(props) {
     super(props);
 
-    this.state = { file: props.currentImage };
+    this.state = { file: props.currentImage || ""};
 
     this.uploadBtn = React.createRef();
   }
@@ -57,7 +57,7 @@ class FileUpload extends React.Component {
           {/* Input which holds file url and will be submitted via "register" ref (react-hook-form) */}
           <input
             ref={this.props.rhfRef}
-            name="Photo"
+            name="image"
             value={this.state.file}
             className="hidden"
             onChange={() => console.log("File changed")}

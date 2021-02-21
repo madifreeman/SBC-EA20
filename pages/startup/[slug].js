@@ -1,8 +1,8 @@
 import React from "react";
-import Airtable from "airtable";
 import Header from "../../src/components/Header";
 import Footer from "../../src/components/Footer";
 import TeamMember from "../../src/components/TeamMember";
+import { q, client } from "../../src/fauna";
 import {
   InstagramIcon,
   LinkedInIcon,
@@ -12,24 +12,31 @@ import {
   MailIcon
 } from "../../public/icons";
 
-const airtable = new Airtable({
-  apiKey: process.env.AIRTABLE_API_KEY,
-});
 
 export async function getStaticPaths() {
-  const records = await airtable
-    .base(process.env.AIRTABLE_BASE_ID)("Startups")
-    .select({
-      fields: ["Slug"],
-    })
-    .all();
-  const paths = records.map((record) => {
+  const results = await client
+    .query(
+      q.Map(
+        q.Paginate(q.Documents(q.Collection("Startups"))),
+        q.Lambda("startupRef", q.Let(
+          {
+            startupDoc: q.Get(q.Var("startupRef"))
+          }, 
+          {
+            slug: q.Select(["data", "slug"], q.Var("startupDoc")),
+          }
+        ))
+      )
+    )
+  
+  const paths = results.data.map((record) => {
     return {
       params: {
-        slug: record.get("Slug"),
+        slug: record.slug
       },
     };
   });
+  
   return {
     paths,
     fallback: false,
@@ -37,55 +44,47 @@ export async function getStaticPaths() {
 }
 
 export async function getStaticProps({ params }) {
-  const records = await airtable
-    .base("appzJwVbIs7gBM2fm")("Startups")
-    .select({
-      filterByFormula: `Slug="${params.slug}"`,
-    })
-    .all();
+  const results = await client.query(
+    q.Map(
+      q.Paginate(q.Match(q.Index("startups_by_slug"), params.slug)),
+      q.Lambda("startupRef", q.Get(q.Var("startupRef")))
+    )
+  );
 
-  const startup = {
-    name: records[0].get("Name") || "",
-    slug: records[0].get("Slug") || "",
-    image: records[0].get("Photo") ? records[0].get("Photo")[0].url : "",
-    city: records[0].get("City") || "",
-    country: records[0].get("Country") || "",
-    description: records[0].get("Short Description") || "",
-    themes: records[0].get("Themes") || [],
-    problem: records[0].get("Problem") || "",
-    solution: records[0].get("Solution") || "",
-    different: records[0].get("Different") || "",
-    achievement: records[0].get("Achievement") || "",
-    website: records[0].get("Website") || "",
-    team: (await getTeamMembers(records[0].get("Name"))) || "",
-    linkedIn: records[0].get("LinkedIn") || "",
-    email: records[0].get("Email") || "",
-    twitter: records[0].get("Twitter") || "",
-    instagram: records[0].get("Instagram") || "",
-    facebook: records[0].get("Facebook") || "",
-  };
+  const startup = results.data[0].data
+  startup.id = results.data[0].ref.id
+  startup.team = await getTeamMembers(startup.id) || [];
+
   return {
-    props: { startup },
+    props: {
+      startup,
+    },
   };
 }
 
 export async function getTeamMembers(startup) {
-  const records = await airtable
-    .base("appzJwVbIs7gBM2fm")("Team Members")
-    .select({
-      fields: ["Name", "Role", "Photo", "Twitter", "LinkedIn"],
-      filterByFormula: `Startup="${startup}"`,
-    })
-    .all();
-  const teamMembers = records.map((member) => {
-    return {
-      name: member.get("Name"),
-      role: member.get("Role"),
-      image: member.get("Photo") ? member.get("Photo")[0].url : "",
-      twitter: member.get("Twitter") || null,
-      linkedIn: member.get("LinkedIn") || null,
-    };
-  });
+  const results = await client
+    .query(
+      q.Map(
+        q.Paginate(q.Match(q.Index("teamMembers_by_startup"), startup)),
+        q.Lambda("teamMemberRef", q.Let(
+          {
+            teamMemberDoc: q.Get(q.Var("teamMemberRef"))
+          }, 
+          {
+            id: q.Select(["ref", "id"], q.Var("teamMemberDoc")),
+            name: q.Select(["data", "name"], q.Var("teamMemberDoc")),
+            image: q.Select(["data", "image"], q.Var("teamMemberDoc")),
+            twitter: q.Select(["data", "twitter"], q.Var("teamMemberDoc")),
+            linkedIn: q.Select(["data", "linkedIn"], q.Var("teamMemberDoc")),
+            role: q.Select(["data", "role"], q.Var("teamMemberDoc")),
+          }
+        ))
+      )
+    )
+  
+  const teamMembers = results.data
+  console.log(teamMembers)
 
   return teamMembers;
 }

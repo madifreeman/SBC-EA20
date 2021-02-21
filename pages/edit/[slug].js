@@ -2,70 +2,62 @@ import React, { useState } from "react";
 import Airtable from "airtable";
 import Header from "../../src/components/Header";
 import Footer from "../../src/components/Footer";
-import TextInput from "../../src/components/TextInput";
-import FileUpload from "../../src/components/FileUpload";
 import EditTeamMemberForm from "../../src/components/EditTeamMemberForm";
 import AddTeamMemberForm from "../../src/components/AddTeamMemberForm";
-import ProfileImage from "../../src/components/ProfileImage";
-import { useForm } from "react-hook-form";
 import EditStartupForm from "../../src/components/EditStartupForm";
+import { Transition } from "@headlessui/react";
+import { q, client } from "../../src/fauna";
 
 const airtable = new Airtable({
   apiKey: process.env.AIRTABLE_API_KEY,
 });
 
-export async function getServerSideProps(context) {
-  let params = context.params;
-  const records = await airtable
-    .base(process.env.AIRTABLE_BASE_ID)("Startups")
-    .select({
-      filterByFormula: `Slug="${params.slug}"`,
-    })
-    .all();
-  const startup = {
-    id: records[0].id,
-    name: records[0].get("Name") || "",
-    slug: records[0].get("Slug") || "",
-    image: records[0].get("Photo")[0].url || "",
-    city: records[0].get("City") || "",
-    country: records[0].get("Country") || "",
-    description: records[0].get("Short Description") || "",
-    themes: records[0].get("Themes") || "",
-    problem: records[0].get("Problem") || "",
-    solution: records[0].get("Solution") || "",
-    different: records[0].get("Different") || "",
-    achievement: records[0].get("Achievement") || "",
-    website: records[0].get("Website") || "",
-    email: records[0].get("Email") || "",
-    linkedIn: records[0].get("LinkedIn") || "",
-    twitter: records[0].get("Twitter") || "",
-    facebook: records[0].get("Facebook") || "",
-    team: (await getTeamMembers(records[0].get("Name"))) || "",
-  };
+
+export async function getServerSideProps({ params }) {
+  const results = await client.query(
+    q.Map(
+      q.Paginate(q.Match(q.Index("startups_by_slug"), params.slug)),
+      q.Lambda("startupRef", q.Get(q.Var("startupRef")))
+    )
+  );
+
+  const startup = results.data[0].data
+  startup.id = results.data[0].ref.id
+  startup.team = await getTeamMembers(startup.id) || [];
+  console.log(startup)
+
   return {
-    props: { startup },
+    props: {
+      startup,
+    },
   };
 }
 
-export async function getTeamMembers(startup) {
-  const records = await airtable
-    .base("appzJwVbIs7gBM2fm")("Team Members")
-    .select({
-      fields: ["Name", "Role", "Photo", "Twitter", "LinkedIn"],
-      filterByFormula: `Startup="${startup}"`,
-    })
-    .all();
 
-  const teamMembers = records.map((member) => {
-    return {
-      id: member.id,
-      name: member.get("Name"),
-      role: member.get("Role"),
-      image: member.get("Photo") ? member.get("Photo")[0].url : "",
-      twitter: member.get("Twitter") || "",
-      linkedIn: member.get("LinkedIn") || "",
-    };
-  });
+export async function getTeamMembers(startup) {
+  // When team members in seperate 
+  console.log(startup)
+  const results = await client
+    .query(
+      q.Map(
+        q.Paginate(q.Match(q.Index("teamMembers_by_startup"), startup)),
+        q.Lambda("teamMemberRef", q.Let(
+          {
+            teamMemberDoc: q.Get(q.Var("teamMemberRef"))
+          }, 
+          {
+            id: q.Select(["ref", "id"], q.Var("teamMemberDoc")),
+            name: q.Select(["data", "name"], q.Var("teamMemberDoc")),
+            image: q.Select(["data", "image"], q.Var("teamMemberDoc")),
+            twitter: q.Select(["data", "twitter"], q.Var("teamMemberDoc")),
+            linkedIn: q.Select(["data", "linkedIn"], q.Var("teamMemberDoc")),
+            role: q.Select(["data", "role"], q.Var("teamMemberDoc")),
+          }
+        ))
+      )
+    )
+  
+  const teamMembers = results.data
 
   return teamMembers;
 }
@@ -76,7 +68,7 @@ class EditStartup extends React.Component {
 
     // Seperate startup details and team details into 2 seperate objects
     const { team, ...startup } = props.startup;
-    
+
     // Convert team array into object with team member id as key
     let teamMembers = {};
     team.forEach((teamMember) => {
@@ -85,7 +77,7 @@ class EditStartup extends React.Component {
 
     this.state = {
       team: teamMembers, // Keep track of team members as they are added/deleted so that they can be displayed/edited
-      addingTeamMember: false // Determines whether add member form is displayed
+      addingTeamMember: false, // Determines whether add member form is displayed
     };
 
     this.handleTeamMemberDelete = this.handleTeamMemberDelete.bind(this);
@@ -114,7 +106,7 @@ class EditStartup extends React.Component {
         </div>
         {/* ######################################### EDIT STARTUP ######################################### */}
         <div className="relative container bg-white rounded shadow-lg w-full mt-8 p-8 mx-auto  justify-between">
-          <EditStartupForm startup={this.props.startup}/>
+          <EditStartupForm startup={this.props.startup} />
           <div className="p-8" />
           {/* ######################################### EDIT TEAM ######################################### */}
           <div className="pt-12 flex justify-between">
@@ -141,15 +133,24 @@ class EditStartup extends React.Component {
               </button>
             </div>
           </div>
-          <div className="space-y-8 divide-y divide-gray-200 w-full">
-            <div className="space-y-8 divide-y divide-gray-200 sm:space-y-5">
+          <div className="space-y-8 w-full">
+            <div className="space-y-8 sm:space-y-5">
               <div>
                 <div>
-                  <div
-                    className={`${
-                      !this.state.addingTeamMember ? "hidden" : "block"
-                    }`}
+                  <Transition
+                    show={this.state.addingTeamMember}
+                    enter="transition duration-100 ease-out"
+                    enterFrom="transform scale-95 opacity-0"
+                    enterTo="transform scale-100 opacity-100"
+                    leave="transition duration-75 ease-out"
+                    leaveFrom="transform scale-100 opacity-100"
+                    leaveTo="transform scale-95 opacity-0"
                   >
+                    {/* <div
+                      className={`${
+                        !this.state.addingTeamMember ? "hidden" : "block"
+                      }`}
+                    > */}
                     <AddTeamMemberForm
                       startupId={this.props.startup.id}
                       onCancel={() => {
@@ -160,11 +161,13 @@ class EditStartup extends React.Component {
                       onAdd={(teamMember) => {
                         const newTeam = { ...this.state.team };
                         newTeam[teamMember.id] = teamMember;
+                        console.log(newTeam)
                         this.setState({ team: newTeam });
                         this.setState({ addingTeamMember: false });
                       }}
                     />
-                  </div>
+                  </Transition>
+                  {/* </div> */}
                   {Object.keys(this.state.team).map((key) => {
                     return (
                       <EditTeamMemberForm

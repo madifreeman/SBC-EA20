@@ -1,28 +1,29 @@
 import Header from "../src/components/Header";
 import Mentor from "../src/components/Mentor";
-import Airtable from "airtable";
+import { q, client } from "../src/fauna";
+
 
 export async function getStaticProps() {
-  const airtable = new Airtable({
-    apiKey: process.env.AIRTABLE_API_KEY
-  });
+  const results = await client
+    .query(
+      q.Map(
+        q.Paginate(q.Documents(q.Collection("Mentors"))),
+        q.Lambda("mentorRef", q.Let(
+          {
+            mentorDoc: q.Get(q.Var("mentorRef"))
+          }, 
+          {
+            name: q.Select(["data", "name"], q.Var("mentorDoc")),
+            image: q.Select(["data", "image"], q.Var("mentorDoc")),
+            slug: q.Select(["data", "slug"], q.Var("mentorDoc")),
+            company: q.Select(["data", "company"], q.Var("mentorDoc")),
+            role: q.Select(["data", "role"], q.Var("mentorDoc")),
+          }
+        ))
+      )
+    )
 
-  const records = await airtable
-    .base(process.env.AIRTABLE_BASE_ID)("Mentors")
-    .select({
-      fields: ["Name", "Photo", "Company", "Role", "Slug"],
-    })
-    .all();
-
-  const mentors = records.map((mentor) => {
-    return {
-      name: mentor.get("Name"),
-      slug: mentor.get("Slug"),
-      image: mentor.get("Photo")[0].url,
-      company: mentor.get("Company"),
-      role: mentor.get("Role"),
-    };
-  });
+  const mentors = results.data
 
   return {
     props: {
@@ -30,7 +31,6 @@ export async function getStaticProps() {
     },
   };
 }
-
 
 export default function Mentors({ mentors }) {
   return (

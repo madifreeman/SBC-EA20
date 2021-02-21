@@ -1,45 +1,79 @@
 import Header from "../src/components/Header";
 import Startup from "../src/components/Startup";
 import React, { useState } from "react";
-import Airtable from 'airtable';
+import Airtable from "airtable";
 import Footer from "../src/components/Footer";
+import { q, client } from "../src/fauna";
 
-  export async function getStaticProps() {
-    const airtable = new Airtable({
-      apiKey: process.env.AIRTABLE_API_KEY
-    });
-  
-    const records = await airtable
-      .base(process.env.AIRTABLE_BASE_ID)('Startups')
-      .select({
-        fields: ["Name",
-        "Photo",
-        "Slug",
-        "City",
-        "Country",
-        "Short Description",
-        "Themes",],
-      })
-      .all();
-  
-    const startups = records.map((startup) => {
-      return {
-        name: startup.get('Name'),
-        slug: startup.get('Slug'),
-        image: startup.get('Photo') ? startup.get('Photo')[0].url : "", 
-        city: startup.get('City'),
-        country: startup.get('Country'),
-        description: startup.get('Short Description'),
-        themes: startup.get('Themes') || [],
-      };
-    });
-    
-    return {
-      props: {
-        startups,
-      },
-    };
-  }
+// export async function getStaticProps() {
+//   const airtable = new Airtable({
+//     apiKey: process.env.AIRTABLE_API_KEY
+//   });
+
+//   const records = await airtable
+//     .base(process.env.AIRTABLE_BASE_ID)('Startups')
+//     .select({
+//       fields: ["Name",
+//       "Photo",
+//       "Slug",
+//       "City",
+//       "Country",
+//       "Short Description",
+//       "Themes",],
+//     })
+//     .all();
+
+//   const startups = records.map((startup) => {
+//     return {
+//       name: startup.get('Name'),
+//       slug: startup.get('Slug'),
+//       image: startup.get('Photo') ? startup.get('Photo')[0].url : "",
+//       city: startup.get('City'),
+//       country: startup.get('Country'),
+//       description: startup.get('Short Description'),
+//       themes: startup.get('Themes') || [],
+//     };
+//   });
+
+//   return {
+//     props: {
+//       startups,
+//     },
+//   };
+// }
+
+export async function getStaticProps() {
+  // retrieve records from FaunaDB 
+  const results = await client
+    .query(
+      q.Map(
+        q.Paginate(q.Documents(q.Collection("Startups"))),
+        q.Lambda("startupRef", q.Let(
+          {
+            startupDoc: q.Get(q.Var("startupRef"))
+          }, 
+          {
+            id: q.Select(["ref", "id"], q.Var("startupDoc")),
+            name: q.Select(["data", "name"], q.Var("startupDoc")),
+            city: q.Select(["data", "city"], q.Var("startupDoc")),
+            country: q.Select(["data", "country"], q.Var("startupDoc")),
+            description: q.Select(["data", "description"], q.Var("startupDoc")),
+            themes: q.Select(["data", "themes"], q.Var("startupDoc")),
+            image: q.Select(["data", "image"], q.Var("startupDoc")),
+            slug: q.Select(["data", "slug"], q.Var("startupDoc")),
+          }
+        ))
+      )
+    )
+
+  const startups = results.data
+
+  return {
+    props: {
+      startups,
+    },
+  };
+}
 
 export default function Startups({ startups }) {
   const [filteredStartups, setFilter] = useState(startups);
@@ -65,9 +99,7 @@ export default function Startups({ startups }) {
         <div>
           <h1 className="w-full md:w-1/4 text-3xl font-semibold text-gray-700 self-end">
             Startups{" "}
-            <span className="font-normal text-gray-400">
-              ({numStartups})
-            </span>
+            <span className="font-normal text-gray-400">({numStartups})</span>
           </h1>
         </div>
         <div>
@@ -101,7 +133,7 @@ export default function Startups({ startups }) {
         <div className="flex flex-wrap -m-2 pt-4">
           {filteredStartups.map((startup) => (
             <Startup
-              key={startup.slug}
+              key={startup.id}
               name={startup.name}
               img={startup.image}
               link={"/startup/" + startup.slug}
@@ -112,9 +144,7 @@ export default function Startups({ startups }) {
           ))}
         </div>
       </div>
-      <Footer/>
+      <Footer />
     </div>
   );
 }
-
-

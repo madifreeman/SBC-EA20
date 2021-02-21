@@ -35,6 +35,7 @@ export async function getStaticProps() {
   const startups = startupRecords.map((startup) => {
     return {
       name: startup.get("Name"),
+      id: startup.getId(),
       slug: startup.get("Slug"),
       image: startup.get("Photo") ? startup.get("Photo")[0].url : "",
       city: startup.get("City"),
@@ -54,7 +55,6 @@ export default function Account({ mentor, startups }) {
     { date: "Wed 4th", month: "December", tableNo: "20" },
     { date: "Thu 5th", month: "December", tableNo: "20" },
   ];
-  console.log(startups);
   return (
     <div>
       <Header height="36" />
@@ -122,7 +122,7 @@ export default function Account({ mentor, startups }) {
                   <div className="flex flex-wrap pt-4">
                     {tables.map((table) => {
                       return (
-                        <div className="w-full md:w-1/2 lg:w-2/3 xl:w-1/2">
+                        <div className="w-full md:w-1/2 lg:w-2/3 xl:w-1/2" key={table.month + " " + table.date}>
                           <div className="flex items-center justify-between px-5 py-3 mb-4 mr-0 border border-gray-200 rounded-lg md:mr-4 lg:mr-0 xl:mr-4 xl:mb-0">
                             <span className="">
                               {table.date}
@@ -142,7 +142,7 @@ export default function Account({ mentor, startups }) {
                 <div className="mt-8 bg-white rounded-lg shadow">
                   {startups.map((startup) => {
                     return (
-                      <div className="flex items-center justify-between px-8 sm:px-12 border-b border-gray-200">
+                      <div className="flex items-center justify-between px-8 sm:px-12 border-b border-gray-200" key={startup.id}>
                         <div className="flex items-center py-4">
                           <img
                             className="hidden object-cover w-24 h-24 mr-8 border-2 rounded-full md:block border-grey-200"
@@ -159,10 +159,11 @@ export default function Account({ mentor, startups }) {
                         </div>
                         <div className="flex">
                           <a
-                            href="https://ea20.sbcaus.com/account/rec2xabQudiDi7AFn/startup/recymmADu5qVFpx6l/rate"
+                            href={`/account/${mentor.id}/${startup.slug}`}
                             className="w-20 py-2 font-semibold text-center text-white bg-teal-500 rounded sm:w-40 hover:shadow-lg hover:bg-teal-600"
                           >
                             <span className="inline sm:hidden">Rate</span>
+                            {/* TODO: Change to Edit Feedback when feedback has already been submitted */}
                             <span className="hidden sm:inline">
                               Leave Feedback
                             </span>

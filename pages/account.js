@@ -1,52 +1,56 @@
 import Header from "../src/components/Header";
 import Footer from "../src/components/Footer";
-import Airtable from "airtable";
+import { q, client } from "../src/fauna";
 
-export async function getStaticProps() {
-  const airtable = new Airtable({
-    apiKey: process.env.AIRTABLE_API_KEY,
-  });
+export async function getServerSideProps() {
+  const mentorResults = await client.query(
+    q.Map(
+      q.Paginate(q.Match(q.Index("mentors_by_slug"), "caitlin-ofarrell")), // TODO: make dynamic once account system set up
+      q.Lambda(
+        "mentorRef",
+        q.Let(
+          {
+            mentorDoc: q.Get(q.Var("mentorRef")),
+          },
+          {
+            id: q.Select(["ref", "id"], q.Var("mentorDoc")),
+            firstName: q.Select(["data", "firstName"], q.Var("mentorDoc")),
+            lastName: q.Select(["data", "lastName"], q.Var("mentorDoc")),
+            image: q.Select(["data", "image"], q.Var("mentorDoc")),
+            slug: q.Select(["data", "slug"], q.Var("mentorDoc")),
+            role: q.Select(["data", "role"], q.Var("mentorDoc")),
+            company: q.Select(["data", "company"], q.Var("mentorDoc")),
+          }
+        )
+      )
+    )
+  );
 
-  const mentorRecords = await airtable
-    .base(process.env.AIRTABLE_BASE_ID)("Mentors")
-    .select({
-      fields: ["First Name", "Last Name", "Photo", "Slug", "Role", "Company"],
-      filterByFormula: "Slug='caitlin-ofarrell'",
-    })
-    .all();
+  const startupResults = await client
+    .query(
+      q.Map(
+        q.Paginate(q.Documents(q.Collection("Startups"))),
+        q.Lambda("startupRef", q.Let(
+          {
+            startupDoc: q.Get(q.Var("startupRef"))
+          }, 
+          {
+            id: q.Select(["ref", "id"], q.Var("startupDoc")),
+            name: q.Select(["data", "name"], q.Var("startupDoc")),
+            city: q.Select(["data", "city"], q.Var("startupDoc")),
+            country: q.Select(["data", "country"], q.Var("startupDoc")),
+            image: q.Select(["data", "image"], q.Var("startupDoc")),
+            slug: q.Select(["data", "slug"], q.Var("startupDoc")),
+          }
+        ))
+      )
+    )
+  
+  const mentor = mentorResults.data[0];
+  const startups = startupResults.data;
 
-  const mentor = {
-    firstName: mentorRecords[0].get("First Name") || "",
-    lastName: mentorRecords[0].get("Last Name") || "",
-    id: mentorRecords[0].getId(),
-    slug: mentorRecords[0].get("Slug") || "",
-    role: mentorRecords[0].get("Role") || "",
-    company: mentorRecords[0].get("Company") || "",
-    photo: mentorRecords[0].get("Photo")[0].url || "",
-  };
-
-  const startupRecords = await airtable
-    .base(process.env.AIRTABLE_BASE_ID)("Startups")
-    .select({
-      fields: ["Name", "Photo", "Slug", "City", "Country"],
-    })
-    .all();
-
-  const startups = startupRecords.map((startup) => {
-    return {
-      name: startup.get("Name"),
-      id: startup.getId(),
-      slug: startup.get("Slug"),
-      image: startup.get("Photo") ? startup.get("Photo")[0].url : "",
-      city: startup.get("City"),
-      country: startup.get("Country"),
-    };
-  });
   return {
-    props: {
-      mentor,
-      startups,
-    },
+    props: { startups, mentor },
   };
 }
 

@@ -5,43 +5,6 @@ import Airtable from "airtable";
 import Footer from "../src/components/Footer";
 import { q, client } from "../src/fauna";
 
-// export async function getStaticProps() {
-//   const airtable = new Airtable({
-//     apiKey: process.env.AIRTABLE_API_KEY
-//   });
-
-//   const records = await airtable
-//     .base(process.env.AIRTABLE_BASE_ID)('Startups')
-//     .select({
-//       fields: ["Name",
-//       "Photo",
-//       "Slug",
-//       "City",
-//       "Country",
-//       "Short Description",
-//       "Themes",],
-//     })
-//     .all();
-
-//   const startups = records.map((startup) => {
-//     return {
-//       name: startup.get('Name'),
-//       slug: startup.get('Slug'),
-//       image: startup.get('Photo') ? startup.get('Photo')[0].url : "",
-//       city: startup.get('City'),
-//       country: startup.get('Country'),
-//       description: startup.get('Short Description'),
-//       themes: startup.get('Themes') || [],
-//     };
-//   });
-
-//   return {
-//     props: {
-//       startups,
-//     },
-//   };
-// }
-
 export async function getStaticProps() {
   // retrieve records from FaunaDB 
   const results = await client

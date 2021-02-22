@@ -26,13 +26,11 @@ export default function AddStartupForm(props) {
     newTeamMember.id = result.ref.id;
 
     props.onAdd(newTeamMember);
-    addButton.current.value = "Added!";
+    addButton.current.value = "Add";
     addButton.current.focus();
     reset();
-    // setTimeout(() => {
-    //   addButton.current.blur();
-    //   addButton.current.value = "Add";
-    // }, 2000)
+    // TODO: Add animation or alert to more clearly indicate 
+    // team member has been added 
     
   }
 

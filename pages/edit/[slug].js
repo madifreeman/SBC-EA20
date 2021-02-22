@@ -8,11 +8,6 @@ import EditStartupForm from "../../src/components/EditStartupForm";
 import { Transition } from "@headlessui/react";
 import { q, client } from "../../src/fauna";
 
-const airtable = new Airtable({
-  apiKey: process.env.AIRTABLE_API_KEY,
-});
-
-
 export async function getServerSideProps({ params }) {
   const results = await client.query(
     q.Map(

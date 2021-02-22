@@ -4,47 +4,6 @@ import Airtable from "airtable";
 import Footer from "../src/components/Footer";
 import { q, client } from "../src/fauna";
 
-// const airtable = new Airtable({
-//   apiKey: process.env.AIRTABLE_API_KEY,
-// });
-
-// export async function getServerSideProps(context) {
-//   const records = await airtable
-//     .base(process.env.AIRTABLE_BASE_ID)("Startups")
-//     .select({
-//       fields: [
-//         "Name",
-//         "Photo",
-//         "Slug",
-//         "City",
-//         "Country",
-//         "Short Description",
-//         "Themes",
-//       ],
-//     })
-//     .all();
-
-//   const startups = records.map((startup) => {
-//     return {
-//       key: startup.getId(),
-//       id: startup.getId(),
-//       name: startup.get("Name"),
-//       slug: startup.get("Slug"),
-//       image: startup.get("Photo") ? startup.get("Photo")[0].url : "",
-//       city: startup.get("City"),
-//       country: startup.get("Country"),
-//       description: startup.get("Short Description"),
-//       themes: startup.get("Themes") || [],
-//     };
-//   });
-
-//   return {
-//     props: {
-//       startups,
-//     },
-//   };
-// }
-
 export async function getServerSideProps(context) {
   const results = await client
     .query(
@@ -132,13 +91,6 @@ class ManageStartups extends React.Component {
                           )
                           const newStartups = this.state.startups.filter(item => item.id !== startup.id)
                           this.setState({startups: newStartups})
-                          // airtable
-                          //   .base(process.env.AIRTABLE_BASE_ID)("Startups")
-                          //   .destroy([startup.id])
-                          //   .then(()=>{
-                          //     const newStartups = this.state.startups.filter(item => item.id !== startup.id)
-                          //     this.setState({startups: newStartups})
-                          //   })
                           
                         }}
                       />

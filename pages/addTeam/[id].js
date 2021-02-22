@@ -17,33 +17,13 @@ export default function AddTeam({ params }) {
   const [team, setTeam] = useState({});
   const [addingTeamMember, setAddingTeamMember] = useState(false);
 
-  // function handleTeamMemberDelete(teamMemberId) {
-  //   // Remove team member from DB
-  //   airtable
-  //     .base(process.env.AIRTABLE_BASE_ID)("Team Members")
-  //     .destroy([teamMemberId]),
-  //     function (err, deletedRecords) {
-  //       if (err) {
-  //         console.error(err);
-  //         return;
-  //       }
-  //       console.log("Deleted", deletedRecords.length, "records");
-  //     };
-  //   // Remove team member from state
-  //   const newTeam = { ...team };
-  //   delete newTeam[teamMemberId];
-  //   setTeam({ team: newTeam });
-  // }
-
-
   function handleTeamMemberDelete(teamMemberId) {
     // Remove team member from state
-    console.log(team)
     const newTeam = { ...team };
-    console.log(newTeam)
     delete newTeam[teamMemberId];
-    console.log(newTeam)
     setTeam(newTeam);
+    // TODO: Add animation or alert to more clearly indicate
+    // team member has been deleted 
   }
 
   return (

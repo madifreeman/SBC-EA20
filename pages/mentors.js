@@ -1,4 +1,3 @@
-import Header from "../src/components/Header";
 import Mentor from "../src/components/Mentor";
 import { q, client } from "../src/fauna";
 
@@ -35,7 +34,6 @@ export async function getStaticProps() {
 export default function Mentors({ mentors }) {
   return (
     <div>
-      <Header height="36" />
       <div className="relative mt-16 px-4 xs:px-8">
         <div className="container mx-auto -mt-16">
           <div className="-mt-16 px-8 pt-4 pb-8 bg-white rounded-lg shadow">

@@ -1,8 +1,5 @@
-import Header from "../src/components/Header";
 import Startup from "../src/components/Startup";
 import React, { useState } from "react";
-import Airtable from "airtable";
-import Footer from "../src/components/Footer";
 import { q, client } from "../src/fauna";
 
 export async function getStaticProps() {
@@ -57,7 +54,6 @@ export default function Startups({ startups }) {
 
   return (
     <div>
-      <Header height="36" />
       <div className="relative container bg-white rounded shadow-lg w-full p-8 mx-auto md:flex items-center justify-between">
         <div>
           <h1 className="w-full md:w-1/4 text-3xl font-semibold text-gray-700 self-end">
@@ -107,7 +103,6 @@ export default function Startups({ startups }) {
           ))}
         </div>
       </div>
-      <Footer />
     </div>
   );
 }

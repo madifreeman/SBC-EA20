@@ -1,7 +1,4 @@
 import React, { useState } from "react";
-import Airtable from "airtable";
-import Header from "../../src/components/Header";
-import Footer from "../../src/components/Footer";
 import EditTeamMemberForm from "../../src/components/EditTeamMemberForm";
 import AddTeamMemberForm from "../../src/components/AddTeamMemberForm";
 import EditStartupForm from "../../src/components/EditStartupForm";
@@ -89,7 +86,6 @@ class EditStartup extends React.Component {
   render() {
     return (
       <div>
-        <Header height="36" />
         <div className="relative container bg-white rounded shadow-lg w-full p-8 mx-auto md:flex items-center justify-between">
           <div className="flex w-full items-center justify-between">
             <div>
@@ -182,7 +178,6 @@ class EditStartup extends React.Component {
             </div>
           </div>
         </div>
-        <Footer />
       </div>
     );
   }

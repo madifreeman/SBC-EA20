@@ -1,6 +1,4 @@
 import React from "react";
-import Header from "../../src/components/Header";
-import Footer from "../../src/components/Footer";
 import TeamMember from "../../src/components/TeamMember";
 import { q, client } from "../../src/fauna";
 import {
@@ -92,7 +90,6 @@ export async function getTeamMembers(startup) {
 export default function StartupProfile({ startup }) {
   return (
     <div>
-      <Header height="36" />
       <div className="relative px-4 xs:px-8">
         <div className="container mx-auto ">
           <div className="flex flex-wrap -mx-4">
@@ -210,7 +207,6 @@ export default function StartupProfile({ startup }) {
           </div>
         </div>
       </div>
-      <Footer />
     </div>
   );
 }

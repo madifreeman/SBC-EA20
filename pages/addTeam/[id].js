@@ -1,7 +1,5 @@
 import React, { useState, useRef } from "react";
 import Airtable from "airtable";
-import Header from "../../src/components/Header";
-import Footer from "../../src/components/Footer";
 import AddTeamMemberForm from "../../src/components/AddTeamMemberForm";
 import EditTeamMemberForm from "../../src/components/EditTeamMemberForm";
 import { client, q } from "../../src/fauna";
@@ -28,7 +26,6 @@ export default function AddTeam({ params }) {
 
   return (
     <div>
-      <Header height="36" />
       <div className="relative container bg-white rounded shadow-lg w-full mt-8 p-8 mx-auto  justify-between -mt-3">
         <div className="flex w-full items-center justify-between ">
           <div>
@@ -109,7 +106,6 @@ export default function AddTeam({ params }) {
           </button>
         </div>
       </div>
-      <Footer />
     </div>
   );
 }

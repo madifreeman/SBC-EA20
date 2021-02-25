@@ -1,16 +1,13 @@
-import Header from "../../src/components/Header";
-import Footer from "../../src/components/Footer";
+import Header from "../../../src/components/Header";
+import Footer from "../../../src/components/Footer";
+import FeedbackMenu from "../../../src/components/FeedbackMenu";
+import FeedbackDashboardPageTitle from "../../../src/components/FeedbackDashboardPageTitle";
 import React from "react";
-import { q, client } from "../../src/fauna";
-import {
-  ChartBarIcon,
-  CommentIcon,
-  HandshakeIcon,
-  InvestIcon,
-  UsersIcon,
-} from "../../public/icons";
+import { q, client } from "../../../src/fauna";
+
 
 export async function getServerSideProps({ params }) {
+  // Get Startup name and ref ID
   const results = await client.query(
     q.Map(
       q.Paginate(q.Match(q.Index("startups_by_slug"), params.slug)),
@@ -28,9 +25,9 @@ export async function getServerSideProps({ params }) {
       )
     )
   );
-
   const startup = results.data[0];
 
+  // Get mean score for startup on each category + overall average score on each category
   const feedbackResults = await client.query(
     q.Map(
       q.Paginate(q.Match(q.Index("feedback_by_startup"), startup.id)),
@@ -98,9 +95,7 @@ export async function getServerSideProps({ params }) {
               ability: q.Mean(
                 q.Paginate(q.Match(q.Index("all_ability_scores")))
               ),
-              market: q.Mean(
-                q.Paginate(q.Match(q.Index("all_market_scores")))
-              ),
+              market: q.Mean(q.Paginate(q.Match(q.Index("all_market_scores")))),
               competitive: q.Mean(
                 q.Paginate(q.Match(q.Index("all_competitive_scores")))
               ),
@@ -123,29 +118,22 @@ export async function getServerSideProps({ params }) {
     )
   );
 
-  
-
   // Turn raw results into more usable objects
   const rawScores = feedbackResults.data[0].scores;
   const rawAverages = feedbackResults.data[0].averages;
 
   const scores = {};
   Object.keys(rawScores).map((key) => {
-      scores[key] = rawScores[key].data[0];
+    scores[key] = rawScores[key].data[0];
   });
   const averages = {};
   Object.keys(rawAverages).map((key) => {
-      averages[key] = rawAverages[key].data[0];
-
+    averages[key] = rawAverages[key].data[0];
   });
 
-  // Calculate overall score/average
-  scores["overall"] = await client.query(
-    q.Mean(Object.values(scores))
-  );
-  averages["overall"] = await client.query(
-    q.Mean(Object.values(averages))
-  );
+  // Calculate overall score for startup and overall average
+  scores["overall"] = await client.query(q.Mean(Object.values(scores)));
+  averages["overall"] = await client.query(q.Mean(Object.values(averages)));
 
   return {
     props: { startup, scores, averages },
@@ -190,15 +178,7 @@ class SectionHeading extends React.Component {
   }
 }
 
-export default function FeedbackSummary({ startup, scores, averages }) {
-  const iconWidth = 5;
-  const tabs = [
-    { name: "Scores", icon: <ChartBarIcon width={iconWidth} /> },
-    { name: "Comments", icon: <CommentIcon width={iconWidth} /> },
-    { name: "Connections", icon: <InvestIcon width={iconWidth} /> },
-    { name: "Investors", icon: <HandshakeIcon width={iconWidth} /> },
-    { name: "Mentors", icon: <UsersIcon width={iconWidth} /> },
-  ];
+export default function FeedbackScores({ startup, scores, averages }) {
   return (
     <div>
       <Header height="36" />
@@ -206,52 +186,19 @@ export default function FeedbackSummary({ startup, scores, averages }) {
         <div className="container mx-auto -mt-16">
           <div className="flex flex-wrap -mx-4">
             <div className="z-10 w-full px-4 pb-8 md:w-full lg:w-1/3 xl:w-1/4">
-              <div className="p-8 sm:p-12 bg-white rounded-lg shadow">
-                <h3 className="pb-3 font-semibold text-gray-500 uppercase text-base tracking-widest">
-                  Feedback
-                </h3>
-                <ul className="text-base font-medium text-gray-700 tracking-wide">
-                  {tabs.map((tab) => {
-                    return (
-                      <li
-                        className="py-2 group flex items-center"
-                        key={tab.name}
-                      >
-                        <i
-                          className=" text-gray-500 group-hover:text-teal-400 pr-2 text-xl w-10 text-center"
-                          aria-hidden="true"
-                        >
-                          {tab.icon}
-                        </i>
-                        <a
-                          className="group-hover:text-teal-500 "
-                          href="/startup/recNUiPH6HXGxU76O/comments"
-                        >
-                          {tab.name}
-                        </a>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
+              <FeedbackMenu selectedTab="Scores" />
             </div>
 
             <div className="z-10 w-full px-4 md:w-full lg:w-2/3 xl:w-3/4">
               <div className="p-8 sm:p-12 bg-white rounded-lg shadow">
-                <div className="pb-10">
-                  <h2 className="pb-2 text-xl font-semibold text-teal-500 leading-none">
-                    {startup.name}
-                  </h2>
-                  <h3 className="pb-6 text-3xl font-semibold text-gray-900 leading-none">
-                    Score Averages
-                  </h3>
-                  <p className="text-base text-gray-700 max-w-2xl">
-                    Below you will find your averaged scores from each of the
-                    mentor feedback questions. The average for each question
-                    across all the teams is also displayed so that you can see
-                    how Bia compared to the other teams at Selection Days.
-                  </p>
-                </div>
+                <FeedbackDashboardPageTitle
+                  startup={startup.name}
+                  title="Score Averages"
+                  description="Below you will find your averaged scores from each of the
+                  mentor feedback questions. The average for each question
+                  across all the teams is also displayed so that you can see
+                  how Bia compared to the other teams at Selection Days."
+                />
                 <div>
                   <SectionHeading title="Overall" />
                   <ScoreCard

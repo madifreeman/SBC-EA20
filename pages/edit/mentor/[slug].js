@@ -1,7 +1,5 @@
 import Airtable from "airtable";
 import TextInput from "../../../src/components/TextInput";
-import Header from "../../../src/components/Header";
-import Footer from "../../../src/components/Footer";
 import { useForm } from "react-hook-form";
 import React, { useRef } from "react";
 import FileUpload from "../../../src/components/FileUpload";
@@ -171,7 +169,6 @@ export default function EditMentor({ mentor }) {
 
   return (
     <div>
-      <Header height="36" />
       <div className="relative container bg-white rounded shadow-lg w-full p-8 mx-auto md:flex items-center justify-between">
         <div className="flex w-full items-center justify-between">
           <div>

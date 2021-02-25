@@ -1,13 +1,9 @@
-import React, { useState } from "react";
-import { Transition } from "@headlessui/react";
-import Header from "../src/components/Header";
-import Footer from "../src/components/Footer";
+import React from "react";
 import { RightArrow } from "../public/icons";
 
 export default function Home() {
   return (
     <div>
-      <Header height="screen" />
       <div className="relative block pt-32 pb-40 text-center">
         <h1 className="text-6xl text-white font-bold">EA20 Selection Days</h1>
         <h2 className="py-3 text-2xl text-teal-100 font-light">
@@ -158,7 +154,6 @@ export default function Home() {
           ></img>
         </div>
       </div>
-      <Footer />
     </div>
   );
 }

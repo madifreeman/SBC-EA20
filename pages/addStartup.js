@@ -1,7 +1,4 @@
 import React, { useState, useRef } from "react";
-import Airtable from "airtable";
-import Header from "../src/components/Header";
-import Footer from "../src/components/Footer";
 import TextInput from "../src/components/TextInput";
 import FileUpload from "../src/components/FileUpload";
 import { useForm } from "react-hook-form";
@@ -36,7 +33,6 @@ export default function AddStartup() {
   }
   return (
     <div>
-      <Header height="36" />
       <div className="relative container bg-white rounded shadow-lg w-full p-8 mx-auto md:flex items-center justify-between">
         <div className="flex w-full items-center justify-between">
           <div>
@@ -237,7 +233,6 @@ export default function AddStartup() {
           </form>
         </div>
       </div>
-      <Footer />
     </div>
   );
 }

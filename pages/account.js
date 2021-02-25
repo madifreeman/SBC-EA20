@@ -1,5 +1,3 @@
-import Header from "../src/components/Header";
-import Footer from "../src/components/Footer";
 import { q, client } from "../src/fauna";
 
 export async function getServerSideProps() {
@@ -61,7 +59,6 @@ export default function Account({ mentor, startups }) {
   ];
   return (
     <div>
-      <Header height="36" />
       <div className="relative pt-12 px-4 xs:px-8">
         <div className="container mx-auto -mt-16">
           <div className="flex flex-wrap -mx-4">
@@ -182,7 +179,6 @@ export default function Account({ mentor, startups }) {
           </div>
         </div>
       </div>
-      <Footer />
     </div>
   );
 }

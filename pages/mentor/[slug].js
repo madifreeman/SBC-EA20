@@ -1,6 +1,4 @@
 import React from "react";
-import Header from "../../src/components/Header";
-import Footer from "../../src/components/Footer";
 import { LinkedInIcon } from "../../public/icons";
 import { q, client } from "../../src/fauna";
 
@@ -56,7 +54,6 @@ export async function getStaticProps({ params }) {
 export default function MentorProfile({ mentor }) {
   return (
     <div>
-      <Header height="36" />
       <div className="relative px-4 xs:px-8 mt-16">
         <div className="container mx-auto -mt-16">
           <div className="flex flex-wrap -mx-4">
@@ -122,7 +119,6 @@ export default function MentorProfile({ mentor }) {
           </div>
         </div>
       </div>
-      <Footer />
     </div>
   );
 }

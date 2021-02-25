@@ -1,7 +1,5 @@
-import Header from "../src/components/Header";
 import React from "react";
 import Airtable from "airtable";
-import Footer from "../src/components/Footer";
 import { q, client } from "../src/fauna";
 
 export async function getServerSideProps(context) {
@@ -41,7 +39,6 @@ class ManageStartups extends React.Component {
   render() {
     return (
       <div>
-        <Header height="36" />
         <div className="relative container bg-white rounded shadow-lg w-full p-8 mx-auto  items-center flex justify-between">
           <div className="">
             <h1 className="sm:text-3xl text-xl font-semibold text-gray-700 self-end">
@@ -100,7 +97,6 @@ class ManageStartups extends React.Component {
             ))}
           </div>
         </div>
-        <Footer />
       </div>
     );
   }

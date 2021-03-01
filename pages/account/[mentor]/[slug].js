@@ -1,10 +1,10 @@
 import { useForm } from "react-hook-form";
-import React from "react";
-import FeedbackSlider from "../../../src/components/FeedbackSlider";
-import { q, client } from "../../../src/fauna";
+import FeedbackSlider from "@/components/FeedbackSlider";
+import { q, client } from "@/utils/fauna";
+import { jsonFetcher } from "@/utils/jsonFetcher";
+import { useRouter } from 'next/router'
 
 export async function getServerSideProps({ params }) {
-  console.log(params)
   const results = await client.query(
     q.Map(
       q.Paginate(q.Match(q.Index("startups_by_slug"), params.slug)),
@@ -35,116 +35,85 @@ export async function getServerSideProps({ params }) {
   };
 }
 
+const SectionHeading = ({ heading, description }) => (
+  <div className="border-b-4 border-gray-200">
+    <h2 className="pt-4 pb-4 text-xl font-semibold text-gray-700">
+      {heading}
 
+      {description ? (
+        <p className="py-2 font-normal text-sm">{description}</p>
+      ) : null}
+    </h2>
+  </div>
+);
 
-class SectionHeading extends React.Component {
-  render() {
-    return (
-      <div className="border-b-4 border-gray-200">
-        <h2 className="pt-4 pb-4 text-xl font-semibold text-gray-700">
-          {this.props.heading}
+const FieldTitle = ({ fieldName, required }) => (
+  <span className="font-semibold text-base text-gray-700">
+    {fieldName}
+    {required ? (
+      <span className="text-red-600"> *</span>
+    ) : (
+      <span className="text-gray-500 text-xs font-normal"> (optional)</span>
+    )}
+  </span>
+);
 
-          {this.props.description ? (
-            <p className="py-2 font-normal text-sm">{this.props.description}</p>
-          ) : null}
-        </h2>
-      </div>
-    );
-  }
-}
-
-class FieldTitle extends React.Component {
-  render() {
-    return (
-      <span className="font-semibold text-base text-gray-700">
-        {this.props.fieldName}
-        {this.props.required ? (
-          <span className="text-red-600"> *</span>
-        ) : (
-          <span className="text-gray-500 text-xs font-normal"> (optional)</span>
-        )}
-      </span>
-    );
-  }
-}
-
-class RadioButtonsField extends React.Component {
-  render() {
-    return (
-      <fieldset className="my-6" name={this.props.fieldName}>
-        <FieldTitle
-          fieldName={this.props.fieldName}
-          required={this.props.required}
-        />
-        {this.props.options.map((option) => {
-          return (
-            <div className="mt-2 ml-3" key={option.value}>
-              <label className="inline-flex items-center cursor-pointer">
-                <input
-                  className="w-4 h-4 text-teal-500 cursor-pointer form-radio"
-                  type="radio"
-                  value={option.value}
-                  name={this.props.fieldId}
-                  ref={this.props.rhfRef}
-                />
-                <span className="ml-3 font-light">{option.label}</span>
-              </label>
-            </div>
-          );
-        })}
-      </fieldset>
-    );
-  }
-}
-
-class LongTextField extends React.Component {
-  render() {
-    return (
-      <div className="my-6">
-        <FieldTitle
-          fieldName={this.props.fieldName}
-          required={this.props.required}
-        />
-        <textarea
-          className="mt-2 inline-block w-full px-2 py-1 bg-white border-2 border-gray-200 rounded-sm"
-          rows={4}
-          name={this.props.fieldId}
-          ref={this.props.rhfRef}
-        />
-      </div>
-    );
-  }
-}
-
-class SliderField extends React.Component {
-  render() {
-    return (
-      <div className="my-6">
-        <FieldTitle
-          fieldName={this.props.fieldName}
-          required={this.props.required}
-        />
-        <div className="w-full mt-10 px-2 py-2">
-          <FeedbackSlider
-            rhfRef={this.props.rhfRef}
-            rhfSetValue={this.props.rhfSetValue}
-            fieldId={this.props.fieldId}
-          />
-          <div className="pt-4 flex justify-between font-semibold text-gray-600">
-            <small>{this.props.minName}</small>
-            <small>{this.props.maxName}</small>
-          </div>
+const RadioButtonsField = (props) => (
+  <fieldset className="my-6" name={props.fieldName}>
+    <FieldTitle fieldName={props.fieldName} required={props.required} />
+    {props.options.map((option) => {
+      return (
+        <div className="mt-2 ml-3" key={option.value}>
+          <label className="inline-flex items-center cursor-pointer">
+            <input
+              className="w-4 h-4 text-teal-500 cursor-pointer form-radio"
+              type="radio"
+              value={option.value}
+              name={props.fieldId}
+              ref={props.rhfRef}
+            />
+            <span className="ml-3 font-light">{option.label}</span>
+          </label>
         </div>
+      );
+    })}
+  </fieldset>
+);
+
+const LongTextField = ({ fieldName, required, fieldId, rhfRef }) => (
+  <div className="my-6">
+    <FieldTitle fieldName={fieldName} required={required} />
+    <textarea
+      className="mt-2 inline-block w-full px-2 py-1 bg-white border-2 border-gray-200 rounded-sm"
+      rows={4}
+      name={fieldId}
+      ref={rhfRef}
+    />
+  </div>
+);
+
+const SliderField = (props) => (
+  <div className="my-6">
+    <FieldTitle fieldName={props.fieldName} required={props.required} />
+    <div className="w-full mt-10 px-2 py-2">
+      <FeedbackSlider
+        rhfRef={props.rhfRef}
+        rhfSetValue={props.rhfSetValue}
+        fieldId={props.fieldId}
+      />
+      <div className="pt-4 flex justify-between font-semibold text-gray-600">
+        <small>{props.minName}</small>
+        <small>{props.maxName}</small>
       </div>
-    );
-  }
-}
+    </div>
+  </div>
+);
 
 export default function LeaveFeedback({ startup, mentorId }) {
   const { register, handleSubmit, setValue } = useForm();
-  const onSubmit = (data) => submitToFauna(data);
+  const router = useRouter()
 
-  async function submitToFauna(data) {
+  async function onSubmit(data) {
     // parse number fields from string to int
     data.knowledge = parseInt(data.knowledge);
     data.passion = parseInt(data.passion);
@@ -155,19 +124,14 @@ export default function LeaveFeedback({ startup, mentorId }) {
     data.traction = parseInt(data.traction);
     data.marketing = parseInt(data.marketing);
     data.presentation = parseInt(data.presentation);
-    
-    // Send feedback data to Fauna
-    await client.query(
-      q.Create(q.Collection("FeedbackSubmissions"), {
-        data: {
-          ...data,
-          mentor: q.Ref(q.Collection("Mentors"), mentorId),
-          startup: q.Ref(q.Collection("Startups"), startup.id)
-        },
-      })
-    );
-    window.location.href = "/account"
 
+    await jsonFetcher("/api/feedback-submissions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    router.push("/account")
   }
 
   return (
@@ -260,7 +224,11 @@ export default function LeaveFeedback({ startup, mentorId }) {
                       <RadioButtonsField
                         fieldName="What do you think of this team's product or service?"
                         fieldId="product"
-                        options={[{label: "Very good", value: 0}, {label: "Average", value: 5}, {label: "Weak", value: 0}]}
+                        options={[
+                          { label: "Very good", value: 0 },
+                          { label: "Average", value: 5 },
+                          { label: "Weak", value: 0 },
+                        ]}
                         required={true}
                         rhfRef={register}
                       />
@@ -303,9 +271,16 @@ export default function LeaveFeedback({ startup, mentorId }) {
                         fieldName="Would you invest in this startup?"
                         fieldId="invest"
                         options={[
-                          {label: "Yes, I'd like to discuss potential investment", value: "Yes"},
-                          {label: "Yes, if I had the money available", value: "Maybe"},
-                          {label: "No", value: "No"},
+                          {
+                            label:
+                              "Yes, I'd like to discuss potential investment",
+                            value: "Yes",
+                          },
+                          {
+                            label: "Yes, if I had the money available",
+                            value: "Maybe",
+                          },
+                          { label: "No", value: "No" },
                         ]}
                         required={true}
                         rhfRef={register}
@@ -313,7 +288,10 @@ export default function LeaveFeedback({ startup, mentorId }) {
                       <RadioButtonsField
                         fieldName="Do you want to mentor this startup during the upcoming program?"
                         fieldId="mentoring"
-                        options={[{label: "Yes", value: "Yes"}, {label: "No", value: "No"}]}
+                        options={[
+                          { label: "Yes", value: "Yes" },
+                          { label: "No", value: "No" },
+                        ]}
                         required={true}
                         rhfRef={register}
                       />
@@ -336,7 +314,10 @@ export default function LeaveFeedback({ startup, mentorId }) {
                       <RadioButtonsField
                         fieldName="Your above feedback will be shared with the startup. Would you like to make it anonymous?"
                         fieldId="anonymous"
-                        options={[{label: "Yes", value: "Yes"}, {label: "No", value: "No"}]}
+                        options={[
+                          { label: "Yes", value: "Yes" },
+                          { label: "No", value: "No" },
+                        ]}
                         required={true}
                         rhfRef={register}
                       />

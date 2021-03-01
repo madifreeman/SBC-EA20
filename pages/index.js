@@ -1,5 +1,5 @@
-import React from "react";
-import { RightArrow } from "../public/icons";
+import Link from "next/link";
+import { RightArrow } from "@/public/icons";
 
 export default function Home() {
   return (
@@ -41,8 +41,11 @@ export default function Home() {
               Sign up today and be part of this unique experience.
             </h3>
             <div className="py-2 text-teal-500 font-semibold text-lg flex items-center justify-center">
-              <a href="/startups" className="pr-1">Register Now</a>
-              <RightArrow width="4"/>
+              <Link href="/startups">
+                <a className="pr-1 flex">
+                  <p className="mx-2">Register Now</p> <RightArrow width="4" />
+                </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -72,8 +75,11 @@ export default function Home() {
               finalists.
             </h3>
             <div className="py-2 text-teal-500 font-semibold text-lg flex items-center justify-center">
-              <a href="/startups" className="pr-1">View Startups</a>
-              <RightArrow width="4"/>
+              <Link href="/startups">
+                <a className="pr-1 flex">
+                  <p className="mx-2">View Startups</p> <RightArrow width="4" />
+                </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -107,8 +113,11 @@ export default function Home() {
               Meet the most experienced leaders in the smart energy industry.
             </h3>
             <div className="py-2 text-teal-500 font-semibold text-lg flex items-center justify-center">
-              <a href="/mentors" className="pr-1">View Mentors</a>
-              <RightArrow width="4"/>
+              <Link href="/mentors">
+                <a className="pr-1 flex">
+                  <p className="mx-2">View Mentors</p> <RightArrow width="4" />
+                </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -141,10 +150,12 @@ export default function Home() {
               </p>
             </div>
           </div>
-          <a href="#" className="text-lg text-teal-500 font-semibold flex items-center">
-            <h2 className="pr-1">View Startups </h2>
-            <RightArrow width="4"/>
-          </a>
+          <Link href="/startups">
+            <a className="text-lg text-teal-500 font-semibold flex items-center">
+              <h2 className="pr-1">View Startups </h2>
+              <RightArrow width="4" />
+            </a>
+          </Link>
         </div>
         <div className="px-8">
           <img

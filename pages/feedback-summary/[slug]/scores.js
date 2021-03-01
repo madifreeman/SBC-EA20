@@ -1,10 +1,6 @@
-import Header from "../../../src/components/Header";
-import Footer from "../../../src/components/Footer";
-import FeedbackMenu from "../../../src/components/FeedbackMenu";
-import FeedbackDashboardPageTitle from "../../../src/components/FeedbackDashboardPageTitle";
-import React from "react";
-import { q, client } from "../../../src/fauna";
-
+import FeedbackMenu from "@/components/FeedbackMenu";
+import FeedbackDashboardPageTitle from "@/components/FeedbackDashboardPageTitle";
+import { q, client } from "@/utils/fauna";
 
 export async function getServerSideProps({ params }) {
   // Get Startup name and ref ID
@@ -140,48 +136,31 @@ export async function getServerSideProps({ params }) {
   };
 }
 
-class ScoreCard extends React.Component {
-  render() {
-    return (
-      <div className="flex flex-wrap mt-2 mb-8 -m-2 w-full">
-        <div className="w-full text-left p-2">
-          <div className="h-full border border-gray-200 rounded px-8 py-6 items-center">
-            <h3 className="text-base font-semibold pb-1">
-              {this.props.question}
-            </h3>
-            <p className="text-base text-gray-700">
-              You scored:{" "}
-              <span className="font-semibold">
-                {this.props.score.toFixed(1)}
-              </span>
-            </p>
-            <p className="text-base text-gray-700">
-              Average:{" "}
-              <span className="font-semibold">
-                {this.props.average.toFixed(1)}
-              </span>
-            </p>
-          </div>
-        </div>
+const ScoreCard = ({ question, score, average }) => (
+  <div className="flex flex-wrap mt-2 mb-8 -m-2 w-full">
+    <div className="w-full text-left p-2">
+      <div className="h-full border border-gray-200 rounded px-8 py-6 items-center">
+        <h3 className="text-base font-semibold pb-1">{question}</h3>
+        <p className="text-base text-gray-700">
+          You scored: <span className="font-semibold">{score.toFixed(1)}</span>
+        </p>
+        <p className="text-base text-gray-700">
+          Average: <span className="font-semibold">{average.toFixed(1)}</span>
+        </p>
       </div>
-    );
-  }
-}
+    </div>
+  </div>
+);
 
-class SectionHeading extends React.Component {
-  render() {
-    return (
-      <h4 className="font-semibold text-gray-500 uppercase text-base tracking-widest">
-        {this.props.title}
-      </h4>
-    );
-  }
-}
+const SectionHeading = ({ title }) => (
+  <h4 className="font-semibold text-gray-500 uppercase text-base tracking-widest">
+    {title}
+  </h4>
+);
 
 export default function FeedbackScores({ startup, scores, averages }) {
   return (
     <div>
-      <Header height="36" />
       <div className="relative px-4 xs:px-8 mt-14">
         <div className="container mx-auto -mt-16">
           <div className="flex flex-wrap -mx-4">

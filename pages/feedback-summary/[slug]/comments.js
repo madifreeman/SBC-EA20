@@ -1,7 +1,6 @@
-import FeedbackMenu from "../../../src/components/FeedbackMenu";
-import FeedbackDashboardPageTitle from "../../../src/components/FeedbackDashboardPageTitle";
-import React from "react";
-import { q, client } from "../../../src/fauna";
+import FeedbackMenu from "@/components/FeedbackMenu";
+import FeedbackDashboardPageTitle from "@/components/FeedbackDashboardPageTitle";
+import { q, client } from "@/utils/fauna";
 
 export async function getServerSideProps({ params }) {
   // Get Startup name and ref ID

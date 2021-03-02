@@ -57,7 +57,7 @@ export default function Startups({ startups }) {
 
   return (
     <div>
-      <div className="relative container bg-white rounded shadow-lg w-full p-8 mx-auto md:flex items-center justify-between">
+      <div className="relative container bg-white rounded shadow-lg w-full p-8 mx-auto md:flex items-center justify-between -mt-10">
         <div>
           <h1 className="w-full md:w-1/4 text-3xl font-semibold text-gray-700 self-end">
             Startups{" "}

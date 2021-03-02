@@ -1,11 +1,17 @@
 import React from "react";
-import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import {StandardHeader, HomeHeader} from "@/components/Header";
+import Header from "@/components/OldHeader"
 
-const Layout = ({ children, headerHeight }) => {
-  return (
+const Layout = ({ children, pathname }) => {
+  let header = <StandardHeader />
+  if (pathname === "/") {
+    header = <HomeHeader />
+  }
+  return ( 
     <>
-      <Header height={headerHeight}/>
+      {/* <Header height={36}/> */}
+      {header}
       <main>{children}</main>
       <Footer />
     </>

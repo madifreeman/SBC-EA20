@@ -9,7 +9,7 @@ function MyApp({ Component, pageProps, router }) {
   }
   return (
     <>
-      <Layout headerHeight={headerHeight}>
+      <Layout pathname={router.pathname}>
         <Component {...pageProps} />
       </Layout>
     </>

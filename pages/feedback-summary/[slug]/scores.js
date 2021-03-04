@@ -1,6 +1,5 @@
-import FeedbackMenu from "@/components/FeedbackMenu";
-import FeedbackDashboardPageTitle from "@/components/FeedbackDashboardPageTitle";
 import { q, client } from "@/utils/fauna";
+import FeedbackDashboardLayout from "@/components/FeedbackDashboardLayout";
 
 export async function getServerSideProps({ params }) {
   // Get Startup name and ref ID
@@ -161,91 +160,76 @@ const SectionHeading = ({ title }) => (
 export default function FeedbackScores({ startup, scores, averages }) {
   return (
     <div>
-      <div className="relative px-4 xs:px-8 mt-14">
-        <div className="container mx-auto -mt-16">
-          <div className="flex flex-wrap -mx-4">
-            <div className="z-10 w-full px-4 pb-8 md:w-full lg:w-1/3 xl:w-1/4">
-              <FeedbackMenu selectedTab="Scores" />
-            </div>
-
-            <div className="z-10 w-full px-4 md:w-full lg:w-2/3 xl:w-3/4">
-              <div className="p-8 sm:p-12 bg-white rounded-lg shadow">
-                <FeedbackDashboardPageTitle
-                  startup={startup.name}
-                  title="Score Averages"
-                  description="Below you will find your averaged scores from each of the
-                  mentor feedback questions. The average for each question
-                  across all the teams is also displayed so that you can see
-                  how Bia compared to the other teams at Selection Days."
-                />
-                <div>
-                  <SectionHeading title="Overall" />
-                  <ScoreCard
-                    question="Your overall score for Selection Days"
-                    score={scores.overall}
-                    average={averages.overall}
-                  />
-                </div>
-                <SectionHeading title="Team & Ability" />
-                <div className="flex flex-wrap mt-2 mb-8 -m-2">
-                  <ScoreCard
-                    question="Does the team have in-depth industry knowledge?"
-                    score={scores.knowledge}
-                    average={averages.knowledge}
-                  />
-                  <ScoreCard
-                    question="Does the team have the passion and vision to make their
-                    idea successful?"
-                    score={scores.passion}
-                    average={averages.passion}
-                  />
-                  <ScoreCard
-                    question="Does this team have the ability to deliver their idea?"
-                    score={scores.ability}
-                    average={averages.ability}
-                  />
-                </div>
-                <SectionHeading title="Market & Product" />
-                <div className="flex flex-wrap mt-2 mb-8 -m-2">
-                  <ScoreCard
-                    question="How big is the team's potential market?"
-                    score={scores.market}
-                    average={averages.market}
-                  />
-                  <ScoreCard
-                    question="Is the market competitive? 10 = No Competitors"
-                    score={scores.competitive}
-                    average={averages.competitive}
-                  />
-                  <ScoreCard
-                    question="What do you think of this team's product or service?"
-                    score={scores.product}
-                    average={averages.product}
-                  />
-                </div>
-                <SectionHeading title="Execution Power" />
-                <div className="flex flex-wrap mt-2 mb-8 -m-2">
-                  <ScoreCard
-                    question="How much market traction does the team have?"
-                    score={scores.traction}
-                    average={averages.traction}
-                  />
-                  <ScoreCard
-                    question="How strong is the team's branding and story?"
-                    score={scores.marketing}
-                    average={averages.marketing}
-                  />
-                  <ScoreCard
-                    question="How strong is the team's presentation skills?"
-                    score={scores.presentation}
-                    average={averages.presentation}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
+      <FeedbackDashboardLayout
+        startup={startup.name}
+        title="Score Averages"
+        description="Below you will find your averaged scores from each of the mentor feedback questions. The average for each question across all the teams is also displayed so that you can see how Bia compared to the other teams at Selection Days."
+        selectedTab="Scores"
+      >
+        <div>
+          <SectionHeading title="Overall" />
+          <ScoreCard
+            question="Your overall score for Selection Days"
+            score={scores.overall}
+            average={averages.overall}
+          />
         </div>
-      </div>
+        <SectionHeading title="Team & Ability" />
+        <div className="flex flex-wrap mt-2 mb-8 -m-2">
+          <ScoreCard
+            question="Does the team have in-depth industry knowledge?"
+            score={scores.knowledge}
+            average={averages.knowledge}
+          />
+          <ScoreCard
+            question="Does the team have the passion and vision to make their
+                    idea successful?"
+            score={scores.passion}
+            average={averages.passion}
+          />
+          <ScoreCard
+            question="Does this team have the ability to deliver their idea?"
+            score={scores.ability}
+            average={averages.ability}
+          />
+        </div>
+        <SectionHeading title="Market & Product" />
+        <div className="flex flex-wrap mt-2 mb-8 -m-2">
+          <ScoreCard
+            question="How big is the team's potential market?"
+            score={scores.market}
+            average={averages.market}
+          />
+          <ScoreCard
+            question="Is the market competitive? 10 = No Competitors"
+            score={scores.competitive}
+            average={averages.competitive}
+          />
+          <ScoreCard
+            question="What do you think of this team's product or service?"
+            score={scores.product}
+            average={averages.product}
+          />
+        </div>
+        <SectionHeading title="Execution Power" />
+        <div className="flex flex-wrap mt-2 mb-8 -m-2">
+          <ScoreCard
+            question="How much market traction does the team have?"
+            score={scores.traction}
+            average={averages.traction}
+          />
+          <ScoreCard
+            question="How strong is the team's branding and story?"
+            score={scores.marketing}
+            average={averages.marketing}
+          />
+          <ScoreCard
+            question="How strong is the team's presentation skills?"
+            score={scores.presentation}
+            average={averages.presentation}
+          />
+        </div>
+      </FeedbackDashboardLayout>
     </div>
   );
 }

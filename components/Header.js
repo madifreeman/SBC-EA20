@@ -8,7 +8,7 @@ function TopBarMenu({ menuItems, loginItem }) {
     <div className="flex-grow hidden md:block md:flex md:items-end md:w-auto">
       <div className="font-semibold md:flex-grow">
         {menuItems.map((item) => (
-          <Link href={item.link}>
+          <Link href={item.link} key={item.name}>
             <a className="block mt-4 md:inline-block md:mt-0 text-teal-200 hover:bg-teal-500 hover:text-white mx-2 px-4 py-2 rounded hover:shadow-lg ">
               {item.name}
             </a>
@@ -43,7 +43,7 @@ function HamburgerMenu({ menuItems, loginItem, isMenuOpen }) {
       >
         <div className="font-semibold">
           {menuItems.concat(loginItem).map((item) => (
-            <Link href={item.link}>
+            <Link href={item.link} key={item.name}>
               <a className="block px-8 py-4 border-b border-gray-200 hover:bg-gray-200 ">
                 {item.name}
               </a>
@@ -67,13 +67,13 @@ function NavBar() {
     <nav className="py-6">
       <div className="flex flex-wrap items-center justify-between w-full">
         <div className="flex items-center flex-grow-0 flex-shrink-0 w-3/4 pr-6 text-white md:w-auto">
-          <a href="/">
-            <Link href="/">
-              <a className="px-4 font-semibold text-white">
-                <img src="/images/logo-white.svg" className="w-56" />
-              </a>
-            </Link>
-          </a>
+          <div>
+          <Link href="/">
+            <a className="px-4 font-semibold text-white">
+              <img src="/images/logo-white.svg" className="w-56" />
+            </a>
+          </Link>
+          </div>
         </div>
 
         <TopBarMenu menuItems={menuItems} loginItem={loginItem} />
@@ -101,7 +101,7 @@ function NavBar() {
 }
 
 export const StandardHeader = () => (
-    <header className="relative w-full bg-teal-600 mb-4 px-4 xs:px-8 overflow-hidden">
+  <header className="relative w-full bg-teal-600 mb-4 px-4 xs:px-8 overflow-hidden">
     <div className="relative container mx-auto z-10">
       <NavBar />
     </div>
@@ -109,11 +109,11 @@ export const StandardHeader = () => (
       className="absolute w-screen h-screen top-0 left-0 object-cover opacity-25 z-0"
       src="/images/bg.png"
     />
-    </header>
-)
+  </header>
+);
 
-export const HomeHeader= () => (
-    <header className="relative w-full bg-teal-600 mb-4 px-4 xs:px-8 overflow-hidden">
+export const HomeHeader = () => (
+  <header className="relative w-full bg-teal-600 mb-4 px-4 xs:px-8 overflow-hidden">
     <div className="relative container mx-auto z-10">
       <NavBar />
     </div>
@@ -126,9 +126,9 @@ export const HomeHeader= () => (
           Wed 4th &amp; Thu 5th December
         </h2>
         <p className="pt-8 sm:text-xl md:text-2xl text-teal-100">
-          We are delighted to invite you to the first event of
-          Startupbootcamp's 2020 smart energy program. Come and help us select
-          the top 10 teams that will disrupt the energy market.
+          We are delighted to invite you to the first event of Startupbootcamp's
+          2020 smart energy program. Come and help us select the top 10 teams
+          that will disrupt the energy market.
         </p>
       </div>
     </div>
@@ -137,6 +137,4 @@ export const HomeHeader= () => (
       src="/images/bg.png"
     />
   </header>
-)
-
-
+);

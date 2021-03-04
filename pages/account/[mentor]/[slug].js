@@ -2,7 +2,8 @@ import { useForm } from "react-hook-form";
 import FeedbackSlider from "@/components/FeedbackSlider";
 import { q, client } from "@/utils/fauna";
 import { jsonFetcher } from "@/utils/jsonFetcher";
-import { useRouter } from 'next/router'
+import { useRouter } from 'next/router';
+
 
 export async function getServerSideProps({ params }) {
   const results = await client.query(
@@ -124,6 +125,8 @@ export default function LeaveFeedback({ startup, mentorId }) {
     data.traction = parseInt(data.traction);
     data.marketing = parseInt(data.marketing);
     data.presentation = parseInt(data.presentation);
+    data.startup = startup.id;
+    data.mentor = mentorId; 
 
     await jsonFetcher("/api/feedback-submissions", {
       method: "POST",
@@ -135,7 +138,7 @@ export default function LeaveFeedback({ startup, mentorId }) {
   }
 
   return (
-    <div>
+    <div className="-mt-8">
       <div className="relative px-4 pb-2 xs:px-8">
         <div className="container mx-auto ">
           <div className="flex flex-wrap -mx-4">

@@ -107,7 +107,7 @@ export default function FeedbackComments({ startup, comments }) {
       >
         <ul className="pt-10">
           {comments.map((item) => (
-            <FeedbackComment comment={item.comment} mentor={item.mentor}/>
+            <FeedbackComment comment={item.comment} mentor={item.mentor} key={Date.now()}/>
           ))}
         </ul>
       </FeedbackDashboardLayout>

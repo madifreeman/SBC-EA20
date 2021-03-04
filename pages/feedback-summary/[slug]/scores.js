@@ -25,7 +25,7 @@ export async function getServerSideProps({ params }) {
   // Get mean score for startup on each category + overall average score on each category
   const feedbackResults = await client.query(
     q.Map(
-      q.Paginate(q.Match(q.Index("feedback_by_startup"), startup.id)),
+      q.Paginate(q.Match(q.Index("feedback_by_startup"), q.Ref(q.Collection("Startups"), startup.id))),
       q.Lambda(
         "feedbackRef",
         q.Let(
@@ -114,6 +114,7 @@ export async function getServerSideProps({ params }) {
   );
 
   // Turn raw results into more usable objects
+  console.log(feedbackResults)
   const rawScores = feedbackResults.data[0].scores;
   const rawAverages = feedbackResults.data[0].averages;
 

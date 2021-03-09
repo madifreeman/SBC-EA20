@@ -28,7 +28,7 @@ const Startup = ({ startup, index, category }) => {
 };
 
 export default function Column({ column, startups, category }) {
-  startups.sort((a, b) => b.averages[category] - a.averages[category])
+  // startups.sort((a, b) => b.averages[category] - a.averages[category])
   return (
     <div
       className={`bg-${column.colour}-100 bg-opacity-70 rounded-lg shadow-lg py-8 px-5 h-full`}

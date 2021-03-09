@@ -358,7 +358,7 @@ export const TickIcon = () => (
     aria-hidden="true"
     data-prefix="fas"
     data-icon="check-circle"
-    class="svg-inline--fa fa-check-circle h-5"
+    className="svg-inline--fa fa-check-circle h-5"
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 512 512"
   >
@@ -374,7 +374,7 @@ export const CrossIcon = () => (
     aria-hidden="true"
     data-prefix="fas"
     data-icon="times-circle"
-    class="svg-inline--fa fa-times-circle h-5"
+    className="svg-inline--fa fa-times-circle h-5"
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 512 512"
   >

@@ -3,10 +3,11 @@ import { DragDropContext } from "react-beautiful-dnd";
 import dynamic from "next/dynamic";
 import { q, client } from "@/utils/fauna";
 import { TickIcon, CrossIcon } from "@/public/icons";
-import { all, ctransposeDependencies, mean, to } from "mathjs";
-const Column = dynamic(import("@/components/Column"));
-// Dynamic import required otherwise next.js does not allow for
-// components to be dragged and dropped (get error "Draggable[id: 17terawatts]: Unable to find drag handle")
+import { mean } from "mathjs";
+const Column = dynamic(import("@/components/Column")); // Dynamic import required otherwise 
+                                                      // next.js does not allow for components 
+                                                      // to be dragged and dropped (get error 
+                                                      // "Draggable[id: 17terawatts]: Unable to find drag handle")
 
 export async function getServerSideProps() {
   // Get Startup, location, average score, num of forms submitted
@@ -202,46 +203,16 @@ export async function getServerSideProps() {
 
   // Find total averages
   const totalAverages = getAverages(totalResults);
-
   return { props: { startupsData, totalAverages } };
 }
-
-function getInitColumns(startupsData) {
-  const startupIds = Object.keys(startupsData);
-  sortStartupIds(startupIds);
-
-  return {
-    accepted: {
-      id: "accepted",
-      title: "Accepted",
-      startupIds: [],
-      colour: "green",
-      icon: <TickIcon />,
-    },
-    undecided: {
-      id: "undecided",
-      title: "Undecided",
-      startupIds: startupIds,
-      colour: "white",
-    },
-    rejected: {
-      id: "rejected",
-      title: "Rejected",
-      startupIds: [],
-      colour: "red",
-      icon: <CrossIcon />,
-    },
-  };
-}
-
 
 
 export default function Selection({ startupsData, totalAverages }) {
   const [startups, setStartups] = useState(startupsData);
   const [category, setCategory] = useState("Total");
   const [columns, setColumns] = useState(getInitColumns(Object.keys(startupsData)));
-
   const scoreCategories = Object.keys(totalAverages);
+
 
   const [winReady, setwinReady] = useState(false);
   useEffect(() => {

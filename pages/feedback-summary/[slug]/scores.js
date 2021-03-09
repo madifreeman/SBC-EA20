@@ -1,5 +1,6 @@
 import { q, client } from "@/utils/fauna";
 import FeedbackDashboardLayout from "@/components/FeedbackDashboardLayout";
+import { mean } from "mathjs";
 
 export async function getServerSideProps({ params }) {
   // Get Startup name and ref ID
@@ -13,126 +14,96 @@ export async function getServerSideProps({ params }) {
             startupDoc: q.Get(q.Var("startupRef")),
           },
           {
-            id: q.Select(["ref", "id"], q.Var("startupDoc")),
             name: q.Select(["data", "name"], q.Var("startupDoc")),
-          }
-        )
-      )
-    )
-  );
-  const startup = results.data[0];
-
-  // Get mean score for startup on each category + overall average score on each category
-  const feedbackResults = await client.query(
-    q.Map(
-      q.Paginate(q.Match(q.Index("feedback_by_startup"), q.Ref(q.Collection("Startups"), startup.id))),
-      q.Lambda(
-        "feedbackRef",
-        q.Let(
-          {
-            feedbackDoc: q.Get(q.Var("feedbackRef")),
-          },
-          {
             scores: {
-              knowledge: q.Mean(
+              knowledge: q.Select(["data", 0], q.Mean(
                 q.Paginate(
-                  q.Match(q.Index("knowledge_scores_by_startup"), startup.id)
+                  q.Match(q.Index("knowledge_scores_by_startup"), q.Var("startupRef"))
                 )
-              ),
-              passion: q.Mean(
+              )),
+              passion: q.Select(["data", 0], q.Mean(
                 q.Paginate(
-                  q.Match(q.Index("passion_scores_by_startup"), startup.id)
+                  q.Match(q.Index("passion_scores_by_startup"), q.Var("startupRef"))
                 )
-              ),
-              ability: q.Mean(
+              )),
+              ability: q.Select(["data", 0], q.Mean(
                 q.Paginate(
-                  q.Match(q.Index("ability_scores_by_startup"), startup.id)
+                  q.Match(q.Index("ability_scores_by_startup"), q.Var("startupRef"))
                 )
-              ),
-              market: q.Mean(
+              )),
+              market: q.Select(["data", 0], q.Mean(
                 q.Paginate(
-                  q.Match(q.Index("market_scores_by_startup"), startup.id)
+                  q.Match(q.Index("market_scores_by_startup"), q.Var("startupRef"))
                 )
-              ),
-              competitive: q.Mean(
+              )),
+              competitive: q.Select(["data", 0], q.Mean(
                 q.Paginate(
-                  q.Match(q.Index("competitive_scores_by_startup"), startup.id)
+                  q.Match(q.Index("competitive_scores_by_startup"), q.Var("startupRef"))
                 )
-              ),
-              product: q.Mean(
+              )),
+              product: q.Select(["data", 0], q.Mean(
                 q.Paginate(
-                  q.Match(q.Index("product_scores_by_startup"), startup.id)
+                  q.Match(q.Index("product_scores_by_startup"), q.Var("startupRef"))
                 )
-              ),
-              traction: q.Mean(
+              )),
+              traction: q.Select(["data", 0], q.Mean(
                 q.Paginate(
-                  q.Match(q.Index("traction_scores_by_startup"), startup.id)
+                  q.Match(q.Index("traction_scores_by_startup"), q.Var("startupRef"))
                 )
-              ),
-              marketing: q.Mean(
+              )),
+              marketing: q.Select(["data", 0], q.Mean(
                 q.Paginate(
-                  q.Match(q.Index("marketing_scores_by_startup"), startup.id)
+                  q.Match(q.Index("marketing_scores_by_startup"), q.Var("startupRef"))
                 )
-              ),
-              presentation: q.Mean(
+              )),
+              presentation: q.Select(["data", 0], q.Mean(
                 q.Paginate(
-                  q.Match(q.Index("presentation_scores_by_startup"), startup.id)
+                  q.Match(q.Index("presentation_scores_by_startup"), q.Var("startupRef"))
                 )
-              ),
+              )),
             },
             averages: {
-              knowledge: q.Mean(
+              knowledge: q.Select(["data", 0], q.Mean(
                 q.Paginate(q.Match(q.Index("all_knowledge_scores")))
-              ),
-              passion: q.Mean(
+              )),
+              passion: q.Select(["data", 0], q.Mean(
                 q.Paginate(q.Match(q.Index("all_passion_scores")))
-              ),
-              ability: q.Mean(
+              )),
+              ability: q.Select(["data", 0], q.Mean(
                 q.Paginate(q.Match(q.Index("all_ability_scores")))
-              ),
-              market: q.Mean(q.Paginate(q.Match(q.Index("all_market_scores")))),
-              competitive: q.Mean(
+              )),
+              market: q.Select(["data", 0], q.Mean(q.Paginate(q.Match(q.Index("all_market_scores"))))),
+              competitive: q.Select(["data", 0], q.Mean(
                 q.Paginate(q.Match(q.Index("all_competitive_scores")))
-              ),
-              product: q.Mean(
+              )),
+              product: q.Select(["data", 0], q.Mean(
                 q.Paginate(q.Match(q.Index("all_product_scores")))
-              ),
-              traction: q.Mean(
+              )),
+              traction: q.Select(["data", 0], q.Mean(
                 q.Paginate(q.Match(q.Index("all_traction_scores")))
-              ),
-              marketing: q.Mean(
+              )),
+              marketing: q.Select(["data", 0], q.Mean(
                 q.Paginate(q.Match(q.Index("all_marketing_scores")))
-              ),
-              presentation: q.Mean(
+              )),
+              presentation: q.Select(["data", 0], q.Mean(
                 q.Paginate(q.Match(q.Index("all_presentation_scores")))
-              ),
-            },
+              )),
+            }
           }
         )
       )
     )
   );
+  
+  const startup = results.data[0].name;
+  const scores = results.data[0].scores;
+  const averages = results.data[0].averages;
 
-  // Turn raw results into more usable objects
-  console.log(feedbackResults)
-  const rawScores = feedbackResults.data[0].scores;
-  const rawAverages = feedbackResults.data[0].averages;
-
-  const scores = {};
-  Object.keys(rawScores).map((key) => {
-    scores[key] = rawScores[key].data[0];
-  });
-  const averages = {};
-  Object.keys(rawAverages).map((key) => {
-    averages[key] = rawAverages[key].data[0];
-  });
-
-  // Calculate overall score for startup and overall average
-  scores["overall"] = await client.query(q.Mean(Object.values(scores)));
-  averages["overall"] = await client.query(q.Mean(Object.values(averages)));
+  scores.overall = mean(Object.values(scores));
+  averages.overall = mean(Object.values(averages));
 
   return {
-    props: { startup, scores, averages },
+    props: { startup, scores, averages }
   };
 }
 
@@ -162,7 +133,7 @@ export default function FeedbackScores({ startup, scores, averages }) {
   return (
     <div>
       <FeedbackDashboardLayout
-        startup={startup.name}
+        startup={startup}
         title="Score Averages"
         description="Below you will find your averaged scores from each of the mentor feedback questions. The average for each question across all the teams is also displayed so that you can see how Bia compared to the other teams at Selection Days."
         selectedTab="Scores"

@@ -49,10 +49,6 @@ export default function Mentors({ mentors }) {
   const [numMentors, setNumMentors] = useState(mentors.length)
   const dayRef = useRef(null)
   const tableRef = useRef(null)
-  // const [day, setDay] = useState(null) // delay in state update
-  // const [table, setTable] = useState("all")
-  // const day = null; // when updating inside function, value was not being updated globally
-  // const table = "all"
 
   function checkIncluded(mentor) {
     if (day === null) {
@@ -94,7 +90,6 @@ export default function Mentors({ mentors }) {
                 Mentors
                 <span className="font-normal text-gray-400">({numMentors})</span>
               </h2>
-              {/* TODO: Make form interactive */}
               <form
                 method="POST"
                 action="/mentors"
@@ -133,7 +128,6 @@ export default function Mentors({ mentors }) {
                       className="block w-full mt-1 text-gray-700 cursor-pointer border border-gray rounded py-3 pl-3 pr-10"
                       ref={tableRef}
                       onChange={(e) => {
-                        // table = e.target.value
                         updateFilter()}}
                     >
                       <option value="all">All tables</option>

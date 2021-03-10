@@ -3,107 +3,66 @@ import FeedbackDashboardLayout from "@/components/FeedbackDashboardLayout";
 import { mean } from "mathjs";
 
 export async function getServerSideProps({ params }) {
-  // Get Startup name and ref ID
-  const results = await client.query(
-    q.Map(
-      q.Paginate(q.Match(q.Index("startups_by_slug"), params.slug)),
-      q.Lambda(
-        "startupRef",
-        q.Let(
-          {
-            startupDoc: q.Get(q.Var("startupRef")),
-          },
-          {
-            name: q.Select(["data", "name"], q.Var("startupDoc")),
-            scores: {
-              knowledge: q.Select(["data", 0], q.Mean(
-                q.Paginate(
-                  q.Match(q.Index("knowledge_scores_by_startup"), q.Var("startupRef"))
-                )
-              )),
-              passion: q.Select(["data", 0], q.Mean(
-                q.Paginate(
-                  q.Match(q.Index("passion_scores_by_startup"), q.Var("startupRef"))
-                )
-              )),
-              ability: q.Select(["data", 0], q.Mean(
-                q.Paginate(
-                  q.Match(q.Index("ability_scores_by_startup"), q.Var("startupRef"))
-                )
-              )),
-              market: q.Select(["data", 0], q.Mean(
-                q.Paginate(
-                  q.Match(q.Index("market_scores_by_startup"), q.Var("startupRef"))
-                )
-              )),
-              competitive: q.Select(["data", 0], q.Mean(
-                q.Paginate(
-                  q.Match(q.Index("competitive_scores_by_startup"), q.Var("startupRef"))
-                )
-              )),
-              product: q.Select(["data", 0], q.Mean(
-                q.Paginate(
-                  q.Match(q.Index("product_scores_by_startup"), q.Var("startupRef"))
-                )
-              )),
-              traction: q.Select(["data", 0], q.Mean(
-                q.Paginate(
-                  q.Match(q.Index("traction_scores_by_startup"), q.Var("startupRef"))
-                )
-              )),
-              marketing: q.Select(["data", 0], q.Mean(
-                q.Paginate(
-                  q.Match(q.Index("marketing_scores_by_startup"), q.Var("startupRef"))
-                )
-              )),
-              presentation: q.Select(["data", 0], q.Mean(
-                q.Paginate(
-                  q.Match(q.Index("presentation_scores_by_startup"), q.Var("startupRef"))
-                )
-              )),
-            },
-            averages: {
-              knowledge: q.Select(["data", 0], q.Mean(
-                q.Paginate(q.Match(q.Index("all_knowledge_scores")))
-              )),
-              passion: q.Select(["data", 0], q.Mean(
-                q.Paginate(q.Match(q.Index("all_passion_scores")))
-              )),
-              ability: q.Select(["data", 0], q.Mean(
-                q.Paginate(q.Match(q.Index("all_ability_scores")))
-              )),
-              market: q.Select(["data", 0], q.Mean(q.Paginate(q.Match(q.Index("all_market_scores"))))),
-              competitive: q.Select(["data", 0], q.Mean(
-                q.Paginate(q.Match(q.Index("all_competitive_scores")))
-              )),
-              product: q.Select(["data", 0], q.Mean(
-                q.Paginate(q.Match(q.Index("all_product_scores")))
-              )),
-              traction: q.Select(["data", 0], q.Mean(
-                q.Paginate(q.Match(q.Index("all_traction_scores")))
-              )),
-              marketing: q.Select(["data", 0], q.Mean(
-                q.Paginate(q.Match(q.Index("all_marketing_scores")))
-              )),
-              presentation: q.Select(["data", 0], q.Mean(
-                q.Paginate(q.Match(q.Index("all_presentation_scores")))
-              )),
-            }
-          }
-        )
-      )
+  
+  const feedbackResults = await client.query(
+    q.Let(
+      {
+        startupDoc: q.Get(q.Match(q.Index("startups_by_slug"), params.slug)),
+      },
+      {
+        // Get name of startup
+        startup: q.Select(["data", "name"], q.Var("startupDoc")),
+        // Get matrix of all scores submitted for startup
+        startupScores: q.Select(
+          ["data"],
+          q.Paginate(
+            q.Match(
+              q.Index("feedback_scores_by_startup"),
+              q.Ref(q.Collection("Startups"), "290750500378247693")
+            )
+          )
+        ),
+        // Get matrix of all scores submitted for all startups
+        allScores: q.Select(
+          ["data"],
+          q.Paginate(q.Match(q.Index("all_feedback_scores")))
+        ),
+      }
     )
   );
-  
-  const startup = results.data[0].name;
-  const scores = results.data[0].scores;
-  const averages = results.data[0].averages;
 
-  scores.overall = mean(Object.values(scores));
-  averages.overall = mean(Object.values(averages));
+  const categories = [
+    "knowledge",
+    "passion",
+    "ability",
+    "market",
+    "competitive",
+    "product",
+    "traction",
+    "marketing",
+    "presentation",
+  ];
+
+  // Find mean for each column in matrix (each columns maps to a category)
+  const startupAveragesArray = mean(feedbackResults.startupScores, 0);
+  const allAveragesArray = mean(feedbackResults.allScores, 0);
+
+  // Create objects mapping each mean score to the corresponding category
+  const scores = {};
+  const averages = {};
+  categories.forEach((category, i) => {
+    scores[category] = startupAveragesArray[i].toFixed(1);
+    averages[category] = allAveragesArray[i].toFixed(1);
+  });
+
+  // Find overall averages
+  scores["overall"] = mean(feedbackResults.startupScores).toFixed(1);
+  averages["overall"] = mean(feedbackResults.allScores).toFixed(1);
+
+  const startup = feedbackResults.startup;
 
   return {
-    props: { startup, scores, averages }
+    props: { startup, scores, averages },
   };
 }
 
@@ -113,10 +72,10 @@ const ScoreCard = ({ question, score, average }) => (
       <div className="h-full border border-gray-200 rounded px-8 py-6 items-center">
         <h3 className="text-base font-semibold pb-1">{question}</h3>
         <p className="text-base text-gray-700">
-          You scored: <span className="font-semibold">{score.toFixed(1)}</span>
+          You scored: <span className="font-semibold">{score}</span>
         </p>
         <p className="text-base text-gray-700">
-          Average: <span className="font-semibold">{average.toFixed(1)}</span>
+          Average: <span className="font-semibold">{average}</span>
         </p>
       </div>
     </div>

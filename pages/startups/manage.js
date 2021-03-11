@@ -48,7 +48,7 @@ export default function ManageStartups({ startups }) {
     setStartups(newStartups);
   }
   return (
-    <div>
+    <div className="-mt-8">
       <div className="relative container bg-white rounded shadow-lg w-full p-8 mx-auto  items-center flex justify-between">
         <div className="">
           <h1 className="sm:text-3xl text-xl font-semibold text-gray-700 self-end">

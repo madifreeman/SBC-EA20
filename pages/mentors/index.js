@@ -81,8 +81,7 @@ export default function Mentors({ mentors }) {
   }
 
   return (
-    <div>
-      <div className="relative mt-16 px-4 xs:px-8">
+      <div className="relative mt-12 px-4 xs:px-8">
         <div className="container mx-auto -mt-16">
           <div className="-mt-16 px-8 pt-4 pb-8 bg-white rounded-lg shadow">
             <div className="flex flex-wrap justify-between xs:pt-4">
@@ -181,6 +180,5 @@ export default function Mentors({ mentors }) {
           </div>
         </div>
       </div>
-    </div>
   );
 }

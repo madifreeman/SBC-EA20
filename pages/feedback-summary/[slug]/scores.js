@@ -51,7 +51,10 @@ export async function getServerSideProps({ params }) {
   scores["overall"] = startupScores.length > 1 ? mean(startupScores).toFixed(1) : "N/A"
   averages["overall"] = allScores.length > 1 ? mean(allScores).toFixed(1) : "N/A"
 
-  const startup = feedbackResults.startup;
+  const startup = {
+    name: feedbackResults.startup,
+    slug: params.slug 
+  }
 
   return {
     props: { startup, scores, averages },

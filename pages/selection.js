@@ -4,215 +4,93 @@ import dynamic from "next/dynamic";
 import { q, client } from "@/utils/fauna";
 import { TickIcon, CrossIcon } from "@/public/icons";
 import { mean } from "mathjs";
-const Column = dynamic(import("@/components/Column")); // Dynamic import required otherwise 
-                                                      // next.js does not allow for components 
-                                                      // to be dragged and dropped (get error 
-                                                      // "Draggable[id: 17terawatts]: Unable to find drag handle")
+const Column = dynamic(import("@/components/Column")); // Dynamic import required otherwise
+// next.js does not allow for components
+// to be dragged and dropped (get error
+// "Draggable[id: 17terawatts]: Unable to find drag handle")
 
 export async function getServerSideProps() {
-  // Get Startup, location, average score, num of forms submitted
-  const startupResults = await client.query(
-    q.Map(
-      q.Paginate(q.Documents(q.Collection("Startups"))),
-      q.Lambda(
-        "startupRef",
-        q.Let(
-          { startupDoc: q.Get(q.Var("startupRef")) },
-          {
-            name: q.Select(["data", "name"], q.Var("startupDoc")),
-            slug: q.Select(["data", "slug"], q.Var("startupDoc")),
-            country: q.Select(["data", "country"], q.Var("startupDoc")),
-            scores: {
-              knowledge: q.Select(
+  const results = await client.query({
+    startupResults: q.Select(
+      ["data"],
+      q.Map(
+        q.Paginate(q.Documents(q.Collection("Startups"))),
+        q.Lambda(
+          "startupRef",
+          q.Let(
+            { startupDoc: q.Get(q.Var("startupRef")) },
+            {
+              // Get info about Startup
+              name: q.Select(["data", "name"], q.Var("startupDoc")),
+              slug: q.Select(["data", "slug"], q.Var("startupDoc")),
+              country: q.Select(["data", "country"], q.Var("startupDoc")),
+              // Get matrix of all scores submitted for startup
+              scores: q.Select(
                 ["data"],
                 q.Paginate(
                   q.Match(
-                    q.Index("knowledge_scores_by_startup"),
-                    q.Var("startupRef")
+                    q.Index("feedback_scores_by_startup"),
+                    q.Select(["ref"], q.Var("startupDoc"))
                   )
                 )
               ),
-              passion: q.Select(
-                ["data"],
-                q.Paginate(
-                  q.Match(
-                    q.Index("passion_scores_by_startup"),
-                    q.Var("startupRef")
-                  )
-                )
-              ),
-              ability: q.Select(
-                ["data"],
-                q.Paginate(
-                  q.Match(
-                    q.Index("ability_scores_by_startup"),
-                    q.Var("startupRef")
-                  )
-                )
-              ),
-              market: q.Select(
-                ["data"],
-                q.Paginate(
-                  q.Match(
-                    q.Index("market_scores_by_startup"),
-                    q.Var("startupRef")
-                  )
-                )
-              ),
-              competitive: q.Select(
-                ["data"],
-                q.Paginate(
-                  q.Match(
-                    q.Index("competitive_scores_by_startup"),
-                    q.Var("startupRef")
-                  )
-                )
-              ),
-              product: q.Select(
-                ["data"],
-                q.Paginate(
-                  q.Match(
-                    q.Index("product_scores_by_startup"),
-                    q.Var("startupRef")
-                  )
-                )
-              ),
-              traction: q.Select(
-                ["data"],
-                q.Paginate(
-                  q.Match(
-                    q.Index("traction_scores_by_startup"),
-                    q.Var("startupRef")
-                  )
-                )
-              ),
-              marketing: q.Select(
-                ["data"],
-                q.Paginate(
-                  q.Match(
-                    q.Index("marketing_scores_by_startup"),
-                    q.Var("startupRef")
-                  )
-                )
-              ),
-              presentation: q.Select(
-                ["data"],
-                q.Paginate(
-                  q.Match(
-                    q.Index("presentation_scores_by_startup"),
-                    q.Var("startupRef")
-                  )
-                )
-              ),
-            },
-          }
+            }
+          )
         )
       )
-    )
-  );
-
-  const totalResults = await client.query({
-    knowledge: q.Select(
-      ["data"],
-      q.Paginate(q.Match(q.Index("all_knowledge_scores")))
     ),
-    passion: q.Select(
+    // Get matrix of all scores submitted for all startups
+    overallResults: q.Select(
       ["data"],
-      q.Paginate(q.Match(q.Index("all_passion_scores")))
-    ),
-    ability: q.Select(
-      ["data"],
-      q.Paginate(q.Match(q.Index("all_ability_scores")))
-    ),
-    market: q.Select(
-      ["data"],
-      q.Paginate(q.Match(q.Index("all_market_scores")))
-    ),
-    competitive: q.Select(
-      ["data"],
-      q.Paginate(q.Match(q.Index("all_competitive_scores")))
-    ),
-    product: q.Select(
-      ["data"],
-      q.Paginate(q.Match(q.Index("all_product_scores")))
-    ),
-    traction: q.Select(
-      ["data"],
-      q.Paginate(q.Match(q.Index("all_traction_scores")))
-    ),
-    marketing: q.Select(
-      ["data"],
-      q.Paginate(q.Match(q.Index("all_marketing_scores")))
-    ),
-    presentation: q.Select(
-      ["data"],
-      q.Paginate(q.Match(q.Index("all_presentation_scores")))
+      q.Paginate(q.Match(q.Index("all_feedback_scores")))
     ),
   });
 
-  function getAverages(data) {
-    let averages = {};
-    const {
-      knowledge,
-      passion,
-      ability,
-      market,
-      competitive,
-      product,
-      traction,
-      marketing,
-      presentation,
-    } = data;
-    const categories = {
-      Total: knowledge.concat(
-        passion,
-        ability,
-        market,
-        competitive,
-        product,
-        traction,
-        marketing,
-        presentation
-      ),
-      "Team & Ability": knowledge.concat(passion, ability),
-      "Market & Product": market.concat(competitive, product),
-      "Execution Power": traction.concat(marketing, presentation),
+  const getAverages = (data) => {
+    const questionMeans = mean(data, 0); // Find mean for each column in matrix (each column maps to a specific question on feedback form)
+    return {
+      Total: mean(questionMeans).toFixed(2), // Find overall mean for all questions
+      // Sort questions into categories and find mean for each category
+      "Team & Ability": mean(questionMeans.slice(0, 3)).toFixed(2),
+      "Market & Product": mean(questionMeans.slice(3, 6)).toFixed(2),
+      "Execution Power": mean(questionMeans.slice(6, 9)).toFixed(2),
     };
-    Object.keys(categories).forEach((key) => {
-      if (categories[key].length > 1)
-        averages[key] = mean(categories[key]).toFixed(2);
-      else averages[key] = 0;
-    });
+  };
 
-    return averages;
-  }
+  const startups = results.startupResults;
+  const overallScores = results.overallResults;
 
-  // Find averages for each startup
-  const startups = startupResults.data;
   let startupsData = {};
-
   startups.forEach((startup) => {
-    const averages = getAverages(startup.scores);
+    const categoryAverages =
+      startup.scores.length < 1
+        ? {
+            Total: null,
+            "Team & Ability": null,
+            "Market & Product": null,
+            "Execution Power": null,
+          }
+        : getAverages(startup.scores);
     startupsData[startup.slug] = {
       name: startup.name,
       id: startup.slug,
       country: startup.country,
-      averages: averages,
+      averages: categoryAverages,
     };
   });
 
-  // Find total averages
-  const totalAverages = getAverages(totalResults);
-  return { props: { startupsData, totalAverages } };
+  const overallAverages = getAverages(overallScores);
+
+  return { props: { startupsData, overallAverages } };
 }
 
-
-export default function Selection({ startupsData, totalAverages }) {
+export default function Selection({ startupsData, overallAverages }) {
   const [startups, setStartups] = useState(startupsData);
   const [category, setCategory] = useState("Total");
-  const [columns, setColumns] = useState(getInitColumns(Object.keys(startupsData)));
-  const scoreCategories = Object.keys(totalAverages);
-
+  const [columns, setColumns] = useState(
+    getInitColumns(Object.keys(startupsData))
+  );
+  const scoreCategories = Object.keys(overallAverages);
 
   const [winReady, setwinReady] = useState(false);
   useEffect(() => {
@@ -221,7 +99,7 @@ export default function Selection({ startupsData, totalAverages }) {
 
   function getInitColumns(startupIds) {
     sortStartupIds(startupIds);
-  
+
     return {
       accepted: {
         id: "accepted",
@@ -247,12 +125,9 @@ export default function Selection({ startupsData, totalAverages }) {
   }
 
   function sortStartupIds(startupIds) {
-    console.log(startupIds)
     startupIds.sort(
-      (a, b) =>
-        startups[b].averages[category] - startups[a].averages[category]
+      (a, b) => startups[b].averages[category] - startups[a].averages[category]
     );
-    console.log(startupIds)
     return startupIds;
   }
 
@@ -265,7 +140,7 @@ export default function Selection({ startupsData, totalAverages }) {
     const finishColumn = columns[destination.droppableId];
 
     const startStartupIds = Array.from(startColumn.startupIds);
-    
+
     const removedItem = startStartupIds.splice(source.index, 1);
     const newStartColumn = {
       ...startColumn,
@@ -297,7 +172,7 @@ export default function Selection({ startupsData, totalAverages }) {
           </h1>
           <ul className="flex md:px-8">
             {scoreCategories.map((category) => (
-              <li className="flex items-center" key={category.id}>
+              <li className="flex items-center" key={category}>
                 <input
                   type="radio"
                   id={category}
@@ -319,7 +194,7 @@ export default function Selection({ startupsData, totalAverages }) {
         </div>
         <div className="px-8 pb-4 font-base text-gray-700 text-sm lg:text-base">
           <p>
-            The average score for "{category}" is {totalAverages[category]}
+            The average score for "{category}" is {overallAverages[category]}
           </p>
         </div>
       </div>

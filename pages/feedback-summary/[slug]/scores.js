@@ -1,9 +1,9 @@
 import { q, client } from "@/utils/fauna";
 import FeedbackDashboardLayout from "@/components/FeedbackDashboardLayout";
 import { mean } from "mathjs";
+import { categories } from "@/utils/feedbackCategories";
 
 export async function getServerSideProps({ params }) {
-  
   const feedbackResults = await client.query(
     q.Let(
       {
@@ -18,9 +18,10 @@ export async function getServerSideProps({ params }) {
           q.Paginate(
             q.Match(
               q.Index("feedback_scores_by_startup"),
-              q.Ref(q.Collection("Startups"), "290750500378247693")
+              q.Select(["ref"], q.Var("startupDoc"))
             )
-          )
+          ),
+          null
         ),
         // Get matrix of all scores submitted for all startups
         allScores: q.Select(
@@ -31,33 +32,24 @@ export async function getServerSideProps({ params }) {
     )
   );
 
-  const categories = [
-    "knowledge",
-    "passion",
-    "ability",
-    "market",
-    "competitive",
-    "product",
-    "traction",
-    "marketing",
-    "presentation",
-  ];
+  const {startupScores, allScores} = feedbackResults;
 
   // Find mean for each column in matrix (each columns maps to a category)
-  const startupAveragesArray = mean(feedbackResults.startupScores, 0);
-  const allAveragesArray = mean(feedbackResults.allScores, 0);
+  // const startupAveragesArray = mean(feedbackResults.startupScores, 0);
+  const startupAveragesArray = startupScores.length > 1 ? mean(startupScores, 0) : [];
+  const allAveragesArray = allScores.length > 1 ? mean(allScores, 0) : [];
 
   // Create objects mapping each mean score to the corresponding category
   const scores = {};
   const averages = {};
   categories.forEach((category, i) => {
-    scores[category] = startupAveragesArray[i].toFixed(1);
-    averages[category] = allAveragesArray[i].toFixed(1);
+    scores[category] = startupAveragesArray[i] ? startupAveragesArray[i].toFixed(1): "N/A"
+    averages[category] = allAveragesArray[i] ? allAveragesArray[i].toFixed(1): "N/A"
   });
 
   // Find overall averages
-  scores["overall"] = mean(feedbackResults.startupScores).toFixed(1);
-  averages["overall"] = mean(feedbackResults.allScores).toFixed(1);
+  scores["overall"] = startupScores.length > 1 ? mean(startupScores).toFixed(1) : "N/A"
+  averages["overall"] = allScores.length > 1 ? mean(allScores).toFixed(1) : "N/A"
 
   const startup = feedbackResults.startup;
 

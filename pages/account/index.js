@@ -2,53 +2,78 @@ import { q, client } from "@/utils/fauna";
 import Link from "next/link";
 
 export async function getServerSideProps() {
-  const mentorResults = await client.query(
-    q.Map(
-      q.Paginate(q.Match(q.Index("mentors_by_slug"), "caitlin-ofarrell")), // TODO: make dynamic once account system set up
-      q.Lambda(
-        "mentorRef",
-        q.Let(
-          {
-            mentorDoc: q.Get(q.Var("mentorRef")),
-          },
-          {
-            id: q.Select(["ref", "id"], q.Var("mentorDoc")),
-            firstName: q.Select(["data", "firstName"], q.Var("mentorDoc")),
-            lastName: q.Select(["data", "lastName"], q.Var("mentorDoc")),
-            image: q.Select(["data", "image"], q.Var("mentorDoc")),
-            slug: q.Select(["data", "slug"], q.Var("mentorDoc")),
-            role: q.Select(["data", "role"], q.Var("mentorDoc")),
-            company: q.Select(["data", "company"], q.Var("mentorDoc")),
-          }
+  const results = await client.query({
+    mentor: q.Select(
+      ["data"],
+      q.Map(
+        q.Paginate(q.Match(q.Index("mentors_by_slug"), "caitlin-ofarrell")), // TODO: make dynamic once account system set up
+        q.Lambda(
+          "mentorRef",
+          q.Let(
+            {
+              mentorDoc: q.Get(q.Var("mentorRef")),
+            },
+            {
+              id: q.Select(["ref", "id"], q.Var("mentorDoc")),
+              firstName: q.Select(["data", "firstName"], q.Var("mentorDoc")),
+              lastName: q.Select(["data", "lastName"], q.Var("mentorDoc")),
+              image: q.Select(["data", "image"], q.Var("mentorDoc")),
+              slug: q.Select(["data", "slug"], q.Var("mentorDoc")),
+              role: q.Select(["data", "role"], q.Var("mentorDoc")),
+              company: q.Select(["data", "company"], q.Var("mentorDoc")),
+              day1Table: q.Select(
+                ["data", "day1Table"],
+                q.Var("mentorDoc"),
+                null
+              ),
+              day2Table: q.Select(
+                ["data", "day2Table"],
+                q.Var("mentorDoc"),
+                null
+              ),
+              feedbackSubmittedFor: q.Select(
+                ["data"],
+                q.Paginate(
+                  q.Match(q.Index("feedback_by_mentor"), q.Var("mentorRef"))
+                )
+              ),
+            }
+          )
         )
       )
-    )
-  );
-
-  const startupResults = await client.query(
-    q.Map(
-      q.Paginate(q.Documents(q.Collection("Startups"))),
-      q.Lambda(
-        "startupRef",
-        q.Let(
-          {
-            startupDoc: q.Get(q.Var("startupRef")),
-          },
-          {
-            id: q.Select(["ref", "id"], q.Var("startupDoc")),
-            name: q.Select(["data", "name"], q.Var("startupDoc")),
-            city: q.Select(["data", "city"], q.Var("startupDoc")),
-            country: q.Select(["data", "country"], q.Var("startupDoc")),
-            image: q.Select(["data", "image"], q.Var("startupDoc")),
-            slug: q.Select(["data", "slug"], q.Var("startupDoc")),
-          }
+    ),
+    startups: q.Select(
+      ["data"],
+      q.Map(
+        q.Paginate(q.Documents(q.Collection("Startups"))),
+        q.Lambda(
+          "startupRef",
+          q.Let(
+            {
+              startupDoc: q.Get(q.Var("startupRef")),
+            },
+            {
+              id: q.Select(["ref", "id"], q.Var("startupDoc")),
+              name: q.Select(["data", "name"], q.Var("startupDoc")),
+              city: q.Select(["data", "city"], q.Var("startupDoc")),
+              country: q.Select(["data", "country"], q.Var("startupDoc")),
+              image: q.Select(["data", "image"], q.Var("startupDoc")),
+              slug: q.Select(["data", "slug"], q.Var("startupDoc")),
+            }
+          )
         )
       )
-    )
-  );
+    ),
+  });
 
-  const mentor = mentorResults.data[0];
-  const startups = startupResults.data;
+  const mentor = results.mentor[0];
+  const startups = results.startups;
+
+  startups.forEach((startup) => {
+    startup.feedbackSubmitted = mentor.feedbackSubmittedFor.includes(
+      startup.id
+    );
+  });
 
   return {
     props: { startups, mentor },
@@ -56,12 +81,24 @@ export async function getServerSideProps() {
 }
 
 export default function Account({ mentor, startups }) {
-  const tables = [
-    { date: "Wed 4th", month: "December", tableNo: "20" },
-    { date: "Thu 5th", month: "December", tableNo: "20" },
-  ];
+  const tables = [];
+  if (mentor.day1Table) {
+    tables.push({
+      date: "Wed 4th",
+      month: "December",
+      tableNo: mentor.day1Table,
+    });
+  }
+  if (mentor.day2Table) {
+    tables.push({
+      date: "Thu 5th",
+      month: "December",
+      tableNo: mentor.day2Table,
+    });
+  }
+
   return (
-    <div>
+    <div className="-mt-5">
       <div className="relative pt-12 px-4 xs:px-8">
         <div className="container mx-auto -mt-16">
           <div className="flex flex-wrap -mx-4">
@@ -80,13 +117,13 @@ export default function Account({ mentor, startups }) {
                     <p>{mentor.role}</p>
                     <div className="flex justify-center pt-4 mt-2 text-gray-500 sm:justify-start lg:justify-center">
                       <Link href="/mentors/edit/caitlin-ofarrell">
-                        {/* TODO: Make dynamic once account system set up */}
+                        {/* TODO: Make link dynamic once account system set up */}
                         <a className="px-4 py-2 text-base font-semibold text-white bg-teal-500 rounded hover:shadow-lg hover:bg-teal-600">
                           Edit Profile
                         </a>
                       </Link>
                       <Link href="/mentors/caitlin-ofarrell">
-                        {/* TODO: Make dynamic once account system set up */}
+                        {/* TODO: Make link dynamic once account system set up */}
                         <a className="px-4 py-2 ml-4 text-base font-semibold text-gray-700 bg-gray-200 rounded hover:shadow-lg hover:bg-gray-300">
                           View Profile
                         </a>
@@ -168,14 +205,22 @@ export default function Account({ mentor, startups }) {
                           </div>
                         </div>
                         <div className="flex">
-                          <Link href={`/account/${mentor.id}/${startup.slug}`}>
-                            <a className="w-20 py-2 font-semibold text-center text-white bg-teal-500 rounded sm:w-40 hover:shadow-lg hover:bg-teal-600">
-                              <span className="inline sm:hidden">Rate</span>
-                              {/* TODO: Change to Edit Feedback when feedback has already been submitted */}
-                              <span className="hidden sm:inline">
-                                Leave Feedback
-                              </span>
-                            </a>
+                          <Link href={`/account/${mentor.slug}/${startup.slug}`}>
+                            {startup.feedbackSubmitted ? (
+                              <a className="w-20 py-2 font-semibold text-center text-gray-700 bg-gray-200 rounded sm:w-40 hover:shadow-lg hover:bg-teal-600">
+                                <span className="inline sm:hidden">Edit</span>
+                                <span className="hidden sm:inline">
+                                  Edit Feedback
+                                </span>
+                              </a>
+                            ) : (
+                              <a className="w-20 py-2 font-semibold text-center text-white bg-teal-500 rounded sm:w-40 hover:shadow-lg hover:bg-teal-600">
+                                <span className="inline sm:hidden">Rate</span>
+                                <span className="hidden sm:inline">
+                                  Leave Feedback
+                                </span>
+                              </a>
+                            )}
                           </Link>
                         </div>
                       </div>

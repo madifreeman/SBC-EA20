@@ -2,37 +2,65 @@ import { useForm } from "react-hook-form";
 import FeedbackSlider from "@/components/FeedbackSlider";
 import { q, client } from "@/utils/fauna";
 import { jsonFetcher } from "@/utils/jsonFetcher";
-import { useRouter } from 'next/router';
-
+import { useRouter } from "next/router";
+import { categories } from "@/utils/feedbackCategories";
 
 export async function getServerSideProps({ params }) {
   const results = await client.query(
-    q.Map(
-      q.Paginate(q.Match(q.Index("startups_by_slug"), params.slug)),
-      q.Lambda(
-        "startupRef",
-        q.Let(
-          {
-            startupDoc: q.Get(q.Var("startupRef")),
-          },
-          {
-            id: q.Select(["ref", "id"], q.Var("startupDoc")),
-            name: q.Select(["data", "name"], q.Var("startupDoc")),
-            image: q.Select(["data", "image"], q.Var("startupDoc")),
-            slug: q.Select(["data", "slug"], q.Var("startupDoc")),
-            city: q.Select(["data", "city"], q.Var("startupDoc")),
-            country: q.Select(["data", "country"], q.Var("startupDoc")),
-            description: q.Select(["data", "description"], q.Var("startupDoc")),
-          }
-        )
-      )
+    q.Let(
+      {
+        startupDoc: q.Get(q.Match(q.Index("startups_by_slug"), params.slug)),
+        mentorDoc: q.Get(q.Match(q.Index("mentors_by_slug"), params.mentor)),
+      },
+      {
+        startup: {
+          id: q.Select(["ref", "id"], q.Var("startupDoc")),
+          name: q.Select(["data", "name"], q.Var("startupDoc")),
+          image: q.Select(["data", "image"], q.Var("startupDoc")),
+          slug: q.Select(["data", "slug"], q.Var("startupDoc")),
+          city: q.Select(["data", "city"], q.Var("startupDoc")),
+          country: q.Select(["data", "country"], q.Var("startupDoc")),
+          description: q.Select(["data", "description"], q.Var("startupDoc")),
+        },
+        mentor: {
+          id: q.Select(["ref", "id"], q.Var("mentorDoc")),
+          slug: params.mentor,
+        },
+        scores: q.Select(
+          ["data"],
+          q.Map(
+            q.Paginate(
+              q.Match(
+                q.Index("feedback_by_mentor_and_startup"),
+                // mentor ref
+                q.Select(["ref"], q.Var("mentorDoc")),
+                // startup ref
+                q.Select(["ref"], q.Var("startupDoc"))
+              )
+            ),
+            q.Lambda(
+              "feedbackRef",
+              q.Get(q.Var("feedbackRef"))
+            )
+          )
+        ),
+      }
     )
   );
 
-  const startup = results.data[0];
+  const { startup, mentor } = results;
+
+  const scores = results.scores[0].data.length < 1 ? null : results.scores[0].data;
+  scores.id = results.scores[0].ref.id;
+  
+  if (scores) {
+    // Fauna refs cause error serializing when being parsed as props, so delete
+    delete scores.mentor;
+    delete scores.startup;
+  }
 
   return {
-    props: { startup, mentorId: params.mentor },
+    props: { startup, scores, mentor },
   };
 }
 
@@ -59,7 +87,7 @@ const FieldTitle = ({ fieldName, required }) => (
   </span>
 );
 
-const RadioButtonsField = (props) => (
+const RadioButtonsField = props => (
   <fieldset className="my-6" name={props.fieldName}>
     <FieldTitle fieldName={props.fieldName} required={props.required} />
     {props.options.map((option) => {
@@ -69,6 +97,7 @@ const RadioButtonsField = (props) => (
             <input
               className="w-4 h-4 text-teal-500 cursor-pointer form-radio"
               type="radio"
+              defaultChecked={props.defaultValue === option.value}
               value={option.value}
               name={props.fieldId}
               ref={props.rhfRef}
@@ -81,14 +110,15 @@ const RadioButtonsField = (props) => (
   </fieldset>
 );
 
-const LongTextField = ({ fieldName, required, fieldId, rhfRef }) => (
+const LongTextField = props => (
   <div className="my-6">
-    <FieldTitle fieldName={fieldName} required={required} />
+    <FieldTitle fieldName={props.fieldName} required={props.required} />
     <textarea
       className="mt-2 inline-block w-full px-2 py-1 bg-white border-2 border-gray-200 rounded-sm"
       rows={4}
-      name={fieldId}
-      ref={rhfRef}
+      name={props.fieldId}
+      ref={props.rhfRef}
+      defaultValue={props.defaultValue}
     />
   </div>
 );
@@ -101,6 +131,7 @@ const SliderField = (props) => (
         rhfRef={props.rhfRef}
         rhfSetValue={props.rhfSetValue}
         fieldId={props.fieldId}
+        defaultValue={props.defaultValue}
       />
       <div className="pt-4 flex justify-between font-semibold text-gray-600">
         <small>{props.minName}</small>
@@ -110,31 +141,43 @@ const SliderField = (props) => (
   </div>
 );
 
-export default function LeaveFeedback({ startup, mentorId }) {
+export default function LeaveFeedback({ startup, mentor, scores }) {
   const { register, handleSubmit, setValue } = useForm();
-  const router = useRouter()
+  const router = useRouter();
 
   async function onSubmit(data) {
     // parse number fields from string to int
-    data.knowledge = parseInt(data.knowledge);
-    data.passion = parseInt(data.passion);
-    data.ability = parseInt(data.ability);
-    data.market = parseInt(data.market);
-    data.competitive = parseInt(data.competitive);
-    data.product = parseInt(data.product);
-    data.traction = parseInt(data.traction);
-    data.marketing = parseInt(data.marketing);
-    data.presentation = parseInt(data.presentation);
-    data.startup = startup.id;
-    data.mentor = mentorId; 
-
-    await jsonFetcher("/api/feedback-submissions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+    categories.forEach((category) => {
+      // If a score hasn't been selected, default back to the score previously
+      // submitted (if there is one) or else default to 0
+      if (data[category]) {
+        data[category] = parseInt(data[category]);
+      } else if (scores[category]) {
+        data[category] = scores[category];
+      } else data[category] = 0;
     });
 
-    router.push("/account")
+    data.startup = startup.id;
+    data.mentor = mentor.id;
+    data.feedbackId = scores.id;
+
+    if (scores) {
+      await jsonFetcher("/api/feedback-submissions", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json"},
+        body: JSON.stringify(data),
+      });
+    } else {
+      await jsonFetcher("/api/feedback-submissions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+    }
+
+    
+
+    router.push("/account");
   }
 
   return (
@@ -183,6 +226,7 @@ export default function LeaveFeedback({ startup, mentorId }) {
                         rhfRef={register}
                         rhfSetValue={setValue}
                         required={true}
+                        defaultValue={scores ? scores.knowledge : 0}
                       />
                       <SliderField
                         fieldName="Does the team have the passion and vision to make their idea successful?"
@@ -192,6 +236,7 @@ export default function LeaveFeedback({ startup, mentorId }) {
                         rhfRef={register}
                         rhfSetValue={setValue}
                         required={true}
+                        defaultValue={scores ? scores.passion : 0}
                       />
                       <SliderField
                         fieldName="Does this team have the ability to deliver their idea?"
@@ -201,6 +246,7 @@ export default function LeaveFeedback({ startup, mentorId }) {
                         rhfRef={register}
                         rhfSetValue={setValue}
                         required={true}
+                        defaultValue={scores ? scores.ability : 0}
                       />
                     </div>
 
@@ -214,6 +260,7 @@ export default function LeaveFeedback({ startup, mentorId }) {
                         rhfRef={register}
                         rhfSetValue={setValue}
                         required={true}
+                        defaultValue={scores ? scores.market : 0}
                       />
                       <SliderField
                         fieldName="Is the market competitive?"
@@ -223,16 +270,18 @@ export default function LeaveFeedback({ startup, mentorId }) {
                         rhfRef={register}
                         rhfSetValue={setValue}
                         required={true}
+                        defaultValue={scores ? scores.competitive : 0}
                       />
                       <RadioButtonsField
                         fieldName="What do you think of this team's product or service?"
                         fieldId="product"
                         options={[
-                          { label: "Very good", value: 0 },
+                          { label: "Very good", value: 10 },
                           { label: "Average", value: 5 },
                           { label: "Weak", value: 0 },
                         ]}
                         required={true}
+                        defaultValue={scores.product}
                         rhfRef={register}
                       />
                     </div>
@@ -247,6 +296,7 @@ export default function LeaveFeedback({ startup, mentorId }) {
                         rhfRef={register}
                         rhfSetValue={setValue}
                         required={true}
+                        defaultValue={scores ? scores.traction : 0}
                       />
                       <SliderField
                         fieldName="How strong is the team's branding and story?"
@@ -256,6 +306,7 @@ export default function LeaveFeedback({ startup, mentorId }) {
                         rhfRef={register}
                         rhfSetValue={setValue}
                         required={true}
+                        defaultValue={scores ? scores.marketing : 0}
                       />
                       <SliderField
                         fieldName="How strong is the team's presentation skills?"
@@ -265,6 +316,7 @@ export default function LeaveFeedback({ startup, mentorId }) {
                         rhfRef={register}
                         rhfSetValue={setValue}
                         required={true}
+                        defaultValue={scores ? scores.presentation : 0}
                       />
                     </div>
 
@@ -287,6 +339,7 @@ export default function LeaveFeedback({ startup, mentorId }) {
                         ]}
                         required={true}
                         rhfRef={register}
+                        defaultValue={scores.invest}
                       />
                       <RadioButtonsField
                         fieldName="Do you want to mentor this startup during the upcoming program?"
@@ -297,12 +350,14 @@ export default function LeaveFeedback({ startup, mentorId }) {
                         ]}
                         required={true}
                         rhfRef={register}
+                        defaultValue={scores.mentoring}
                       />
                       <LongTextField
                         fieldName="Are there any companies and/or people you'd like to connect this startup with?"
                         fieldId="connect"
                         required={false}
                         rhfRef={register}
+                        defaultValue={scores.connect}
                       />
                     </div>
 
@@ -313,6 +368,7 @@ export default function LeaveFeedback({ startup, mentorId }) {
                         fieldId="comments"
                         required={false}
                         rhfRef={register}
+                        defaultValue={scores.comments}
                       />
                       <RadioButtonsField
                         fieldName="Your above feedback will be shared with the startup. Would you like to make it anonymous?"
@@ -323,6 +379,7 @@ export default function LeaveFeedback({ startup, mentorId }) {
                         ]}
                         required={true}
                         rhfRef={register}
+                        defaultValue={scores.anonymous}
                       />
                     </div>
 
@@ -336,6 +393,7 @@ export default function LeaveFeedback({ startup, mentorId }) {
                         fieldId="concerns"
                         required={false}
                         rhfRef={register}
+                        defaultValue={scores.concerns}
                       />
                     </div>
 

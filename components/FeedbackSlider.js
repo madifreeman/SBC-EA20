@@ -1,11 +1,11 @@
 import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
 
-const FeedbackSlider = ({ fieldId, rhfRef, rhfSetValue }) => {
+const FeedbackSlider = ({ fieldId, rhfRef, rhfSetValue, defaultValue }) => {
   const SliderWithTooltip = Slider.createSliderWithTooltip(Slider);
 
   function handleOnChange(v) {
-    rhfSetValue(fieldId, v)
+    rhfSetValue(fieldId, v);
   }
 
   return (
@@ -21,10 +21,11 @@ const FeedbackSlider = ({ fieldId, rhfRef, rhfSetValue }) => {
           marginLeft: 6,
           backgroundColor: "white",
         }}
+        defaultValue={defaultValue}
         onAfterChange={handleOnChange}
         min={0}
         max={10}
-        tipProps={{visible: true}}
+        tipProps={{ visible: true }}
       />
       <input
         ref={rhfRef}
@@ -35,11 +36,6 @@ const FeedbackSlider = ({ fieldId, rhfRef, rhfSetValue }) => {
       />
     </div>
   );
-}
+};
 
 export default FeedbackSlider;
-
-
-
- 
-

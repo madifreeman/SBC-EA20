@@ -3,14 +3,13 @@ import TextInput from "@/components/TextInput";
 import { useForm } from "react-hook-form";
 import React, { useRef } from "react";
 import {jsonFetcher} from "@/utils/jsonFetcher";
-import {q} from "@/utils/fauna";
 
 const AddStartupForm = ({ startupId, onAdd, onCancel }) => {
   const { register, handleSubmit, reset } = useForm();
   const addButton = useRef(null);
 
   const onSubmit = async data => {
-    data.startup = q.Ref(q.Collection("Startups"), startupId);
+    data.startup = startupId;
     addButton.current.value = "Adding...";
     addButton.current.focus();
 
@@ -26,7 +25,7 @@ const AddStartupForm = ({ startupId, onAdd, onCancel }) => {
 
     const newTeamMember = result.data;
     newTeamMember.id = result.ref['@ref'].id;
-    onAdd(newTeamMember) 
+    onAdd(newTeamMember, addButton, data, reset) 
   }
 
   return (

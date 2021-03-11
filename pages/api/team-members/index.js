@@ -1,6 +1,9 @@
 import { client, q } from "@/utils/fauna";
 
 export default async function teamMember(req, res) {
+  const data = req.body;
+  data.startup = q.Ref(q.Collection("Team Members"), data.startup)
+  
   try {
     const teamMemberRes = await client.query(
       q.Create(q.Collection("TeamMembers"), {

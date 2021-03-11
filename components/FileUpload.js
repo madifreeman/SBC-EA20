@@ -1,7 +1,7 @@
 import ProfileImage from "@/components/ProfileImage";
 import { useRef, useState } from "react";
 
-const FileUpload = ({ currentImage, rhfRef }) => {
+const FileUpload = ({ currentImage, rhfRef, imageName }) => {
   const [file, setFile] = useState(currentImage);
   const uploadBtn = useRef(null);
   const inputElement = useRef(null);
@@ -31,7 +31,7 @@ const FileUpload = ({ currentImage, rhfRef }) => {
       <span className="h-12 w-12 rounded-full overflow-hidden bg-gray-100">
         <ProfileImage imageURL={file} />
       </span>
-      <div onClick={() => inputElement.click()}>
+      <div onClick={() => inputElement.current.click()}>
         {/* Button displayed in UI, click triggers click of file upload below*/}
         <input
           type="button"
@@ -41,7 +41,7 @@ const FileUpload = ({ currentImage, rhfRef }) => {
         />
         {/* Actual file input (hidden from UI) - click is trigger when above input button clicked*/}
         <input
-          ref={(input) => (inputElement.current = input)}
+          ref={inputElement}
           type="file"
           className="hidden"
           onChange={handleFileChange}
@@ -50,7 +50,7 @@ const FileUpload = ({ currentImage, rhfRef }) => {
         {/* Input which holds file url and will be submitted via "register" ref (react-hook-form) */}
         <input
           ref={rhfRef}
-          name="image"
+          name={imageName || "image"}
           value={file}
           className="hidden"
           onChange={() => console.log("File changed")}

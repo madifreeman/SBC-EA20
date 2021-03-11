@@ -6,24 +6,55 @@ import { themes } from "@/utils/themes";
 import slugify from "slugify";
 import { jsonFetcher } from "@/utils/jsonFetcher";
 import { useRouter } from "next/router";
+import { TimesIcon } from "@/public/icons";
 
 export default function AddStartup() {
   const { register, handleSubmit } = useForm();
+  const [formIds, setFormIds] = useState(["init"]);
+
   const router = useRouter();
 
   async function onSubmitStartupDetails(data) {
-    data.slug = slugify(data.name)
-    const result = await jsonFetcher("/api/startups", {
+    // Extract team member details from data
+    const teamMemberFields = ["name", "role", "twitter", "linkedIn", "image"];
+    const teamMembers = formIds.map((formId) => {
+      const member = {};
+      teamMemberFields.forEach((field) => {
+        member[field] = data[`team${formId}-${field}`];
+        delete data[`team${formId}-${field}`];
+      });
+      return member;
+    });
+
+    data.slug = slugify(data.name).toLowerCase();
+
+    // Add startup
+    jsonFetcher("/api/startups", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
+    }).then(async (result) => {
+      // add team members
+      teamMembers.forEach(async (teamMember) => {
+        teamMember.startup = result.ref.id;
+        await jsonFetcher("/api/team-members", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(teamMember),
+        });
+      });
+      router.push(`/startups/${result.data.slug}`);
     });
-    // TODO: Add team members
-    console.log(result)
-    router.push(`/add-team/${result.ref['@ref'].id}`);
   }
+
+  const onTeamMemberDelete = (formId) => {
+    let newFormIds = [...formIds];
+    newFormIds = newFormIds.filter((item) => item !== formId);
+    setFormIds(newFormIds);
+  };
+
   return (
-    <div>
+    <div className="-mt-8">
       <div className="relative container bg-white rounded shadow-lg w-full p-8 mx-auto md:flex items-center justify-between">
         <div className="flex w-full items-center justify-between">
           <div>
@@ -46,9 +77,9 @@ export default function AddStartup() {
                     Startup Profile
                   </h3>
                   <p className="mt-1 max-w-2xl text-sm text-gray-500">
-                    Please note: All startup and team member details entered
-                    will be publicly visible on our website. It may take up to
-                    30mins for any changes to propagate.
+                    Please note: All startup details entered will be publicly
+                    visible on our website. It may take up to 30mins for any
+                    changes to propagate.
                   </p>
                 </div>
 
@@ -211,6 +242,38 @@ export default function AddStartup() {
                     </div>
                   </div>
                 </div>
+                <div className="mt-12">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">
+                    Team members
+                  </h3>
+                  <p className="mt-1 max-w-2xl text-sm text-gray-500">
+                    Please note: All startup team member details entered will be
+                    publicly visible on our website.
+                  </p>
+                </div>
+                {formIds.map((formId) => {
+                  return (
+                    <TeamMemberForm
+                      key={formId}
+                      id={formId}
+                      rhfRef={register}
+                      onDelete={() => onTeamMemberDelete(formId)}
+                    />
+                  );
+                })}
+                <div className="flex container w-full justify-end">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newFormIds = [...formIds];
+                      newFormIds.push(Math.floor(Math.random() * 10000000));
+                      setFormIds(newFormIds);
+                    }}
+                    className="text-sm  py-2 px-2 rounded shadow-lg font-semibold mr-2 cursor-pointer bg-gray-200 text-gray-700 hover:bg-gray-300 w-48"
+                  >
+                    + Add Another Member
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -218,7 +281,7 @@ export default function AddStartup() {
               <input
                 type="submit"
                 className="block py-2 px-4 rounded shadow-lg float-right font-semibold mr-2 cursor-pointer bg-teal-500 text-white hover:bg-teal-600 w-48"
-                value="Continue"
+                value="Submit"
               />
             </div>
           </form>
@@ -227,3 +290,65 @@ export default function AddStartup() {
     </div>
   );
 }
+
+const TeamMemberForm = ({ rhfRef, id, onDelete }) => {
+  return (
+    <div id="form" className="divide-y-0 py-2">
+      <div className="sm:border-t sm:border-gray-200 sm:pt-2 sm:-mb-2 w-full">
+        <button
+          className="text-gray-400 font-semibold flex container justify-end"
+          onClick={onDelete}
+        >
+          <TimesIcon />
+        </button>
+      </div>
+      <TextInput
+        fieldName="Team Member's Name"
+        fieldId={`team${id}-name`}
+        isRequired={true}
+        inputType="short"
+        rhfRef={rhfRef}
+      />
+      <TextInput
+        fieldName="Role"
+        fieldId={`team${id}-role`}
+        isRequired={true}
+        inputType="short"
+        rhfRef={rhfRef}
+      />
+      <TextInput
+        fieldName="Twitter"
+        fieldId={`team${id}-twitter`}
+        isRequired={false}
+        inputType="short"
+        rhfRef={rhfRef}
+      />
+      <TextInput
+        fieldName="LinkedIn"
+        fieldId={`team${id}-linkedIn`}
+        isRequired={false}
+        inputType="short"
+        rhfRef={rhfRef}
+      />
+      <div className="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-center sm:border-t sm:border-gray-200 sm:pt-5">
+        <label
+          htmlFor="photo"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Photo
+          <span className="text-gray-500 text-xs font-normal"> (optional)</span>
+        </label>
+        <div className="mt-1 sm:mt-0 sm:col-span-2">
+          <div className="flex items-center">
+            <FileUpload
+              currentImage=""
+              rhfRef={rhfRef}
+              imageName={`team${id}-image`}
+            />
+          </div>
+        </div>
+        <input type="submit" className="hidden" value="Submit" />
+      </div>
+    </div>
+  );
+};

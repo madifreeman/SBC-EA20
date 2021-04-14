@@ -13,27 +13,27 @@ const FeedbackMenu = ({ selectedTab, slug }) => {
     {
       name: "Scores",
       icon: <ChartBarIcon width={iconWidth} />,
-      link: "/feedback-summary/" + slug + "/scores",
+      link: "/startups/" + slug + "/dashboard/feedback/scores",
     },
     {
       name: "Comments",
       icon: <CommentIcon width={iconWidth} />,
-      link: "/feedback-summary/" + slug + "/comments",
+      link: "/startups/" + slug + "/dashboard/feedback/comments",
     },
     {
       name: "Connections",
       icon: <InvestIcon width={iconWidth} />,
-      link: "/feedback-summary/" + slug + "/connections",
+      link: "/startups/" + slug + "/dashboard/feedback/connections",
     },
     {
       name: "Investors",
       icon: <HandshakeIcon width={iconWidth} />,
-      link: "/feedback-summary/" + slug + "/investors",
+      link: "/startups/" + slug + "/dashboard/feedback/investors",
     },
     {
       name: "Mentors",
       icon: <UsersIcon width={iconWidth} />,
-      link: "/feedback-summary/" + slug + "/mentors",
+      link: "/startups/" + slug + "/dashboard/feedback/mentors",
     },
   ];
   return (

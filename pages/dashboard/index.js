@@ -205,7 +205,7 @@ export default function Account({ mentor, startups }) {
                           </div>
                         </div>
                         <div className="flex">
-                          <Link href={`/account/${mentor.slug}/${startup.slug}`}>
+                          <Link href={`/dashboard/feedback?startup=${startup.slug}`}>
                             {startup.feedbackSubmitted ? (
                               <a className="w-20 py-2 font-semibold text-center text-gray-700 bg-gray-200 rounded sm:w-40 hover:shadow-lg hover:bg-teal-600">
                                 <span className="inline sm:hidden">Edit</span>

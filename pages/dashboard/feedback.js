@@ -5,12 +5,12 @@ import { jsonFetcher } from "@/utils/jsonFetcher";
 import { useRouter } from "next/router";
 import { categories } from "@/utils/feedbackCategories";
 
-export async function getServerSideProps({ params }) {
+export async function getServerSideProps({query}) {
   const results = await client.query(
     q.Let(
       {
-        startupDoc: q.Get(q.Match(q.Index("startups_by_slug"), params.slug)),
-        mentorDoc: q.Get(q.Match(q.Index("mentors_by_slug"), params.mentor)),
+        startupDoc: q.Get(q.Match(q.Index("startups_by_slug"), query.startup)),
+        mentorDoc: q.Get(q.Match(q.Index("mentors_by_slug"), "caitlin-ofarrell")), //TODO: Edit once auth system operating
       },
       {
         startup: {
@@ -24,7 +24,7 @@ export async function getServerSideProps({ params }) {
         },
         mentor: {
           id: q.Select(["ref", "id"], q.Var("mentorDoc")),
-          slug: params.mentor,
+          slug: q.Select(["data", "slug"], q.Var("mentorDoc")),
         },
         scores: q.Select(
           ["data"],
@@ -49,12 +49,14 @@ export async function getServerSideProps({ params }) {
   );
 
   const { startup, mentor } = results;
+  console.log(results)
 
-  const scores = results.scores[0].data.length < 1 ? null : results.scores[0].data;
-  scores.id = results.scores[0].ref.id;
+  const scores = results.scores[0] ? results.scores[0].data : {};
   
-  if (scores) {
+  
+  if (Object.keys(scores).length > 0) {
     // Fauna refs cause error serializing when being parsed as props, so delete
+    scores.id = results.scores[0].ref.id;
     delete scores.mentor;
     delete scores.startup;
   }
@@ -144,6 +146,7 @@ const SliderField = (props) => (
 export default function LeaveFeedback({ startup, mentor, scores }) {
   const { register, handleSubmit, setValue } = useForm();
   const router = useRouter();
+  console.log(scores)
 
   async function onSubmit(data) {
     // parse number fields from string to int
@@ -226,7 +229,7 @@ export default function LeaveFeedback({ startup, mentor, scores }) {
                         rhfRef={register}
                         rhfSetValue={setValue}
                         required={true}
-                        defaultValue={scores ? scores.knowledge : 0}
+                        defaultValue={scores.knowledge}
                       />
                       <SliderField
                         fieldName="Does the team have the passion and vision to make their idea successful?"
@@ -236,7 +239,7 @@ export default function LeaveFeedback({ startup, mentor, scores }) {
                         rhfRef={register}
                         rhfSetValue={setValue}
                         required={true}
-                        defaultValue={scores ? scores.passion : 0}
+                        defaultValue={scores.passion}
                       />
                       <SliderField
                         fieldName="Does this team have the ability to deliver their idea?"
@@ -246,7 +249,7 @@ export default function LeaveFeedback({ startup, mentor, scores }) {
                         rhfRef={register}
                         rhfSetValue={setValue}
                         required={true}
-                        defaultValue={scores ? scores.ability : 0}
+                        defaultValue={scores.ability}
                       />
                     </div>
 
@@ -260,7 +263,7 @@ export default function LeaveFeedback({ startup, mentor, scores }) {
                         rhfRef={register}
                         rhfSetValue={setValue}
                         required={true}
-                        defaultValue={scores ? scores.market : 0}
+                        defaultValue={scores.market}
                       />
                       <SliderField
                         fieldName="Is the market competitive?"
@@ -270,7 +273,7 @@ export default function LeaveFeedback({ startup, mentor, scores }) {
                         rhfRef={register}
                         rhfSetValue={setValue}
                         required={true}
-                        defaultValue={scores ? scores.competitive : 0}
+                        defaultValue={scores.competitive}
                       />
                       <RadioButtonsField
                         fieldName="What do you think of this team's product or service?"
@@ -296,7 +299,7 @@ export default function LeaveFeedback({ startup, mentor, scores }) {
                         rhfRef={register}
                         rhfSetValue={setValue}
                         required={true}
-                        defaultValue={scores ? scores.traction : 0}
+                        defaultValue={scores.traction}
                       />
                       <SliderField
                         fieldName="How strong is the team's branding and story?"
@@ -306,7 +309,7 @@ export default function LeaveFeedback({ startup, mentor, scores }) {
                         rhfRef={register}
                         rhfSetValue={setValue}
                         required={true}
-                        defaultValue={scores ? scores.marketing : 0}
+                        defaultValue={scores.marketing}
                       />
                       <SliderField
                         fieldName="How strong is the team's presentation skills?"
@@ -316,7 +319,7 @@ export default function LeaveFeedback({ startup, mentor, scores }) {
                         rhfRef={register}
                         rhfSetValue={setValue}
                         required={true}
-                        defaultValue={scores ? scores.presentation : 0}
+                        defaultValue={scores.presentation}
                       />
                     </div>
 

@@ -5,10 +5,10 @@ import FileUpload from "@/components/FileUpload";
 import { areasOfExpertise } from "@/utils/areasOfExpertise";
 import { q, client } from "@/utils/fauna";
 
-export async function getServerSideProps({ params }) {
+export async function getServerSideProps() {
   const results = await client.query(
     q.Map(
-      q.Paginate(q.Match(q.Index("mentors_by_slug"), params.slug)),
+      q.Paginate(q.Match(q.Index("mentors_by_slug"), "caitlin-ofarrell")), // TODO: edit once auth system operating
       q.Lambda("mentorRef", q.Get(q.Var("mentorRef")))
     )
   );

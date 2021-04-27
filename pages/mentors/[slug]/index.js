@@ -1,56 +1,58 @@
 import { LinkedInIcon } from "@/public/icons";
-import { q, client } from "@/utils/fauna";
+// import { q, client } from "@/utils/fauna";
+import groq from "groq";
+import client from "@/utils/sanity";
+import urlFor from "@/utils/imageUrlBuilder";
 
 export async function getStaticPaths() {
-  const results = await client
-    .query(
-      q.Map(
-        q.Paginate(q.Documents(q.Collection("Mentors"))),
-        q.Lambda("mentorRef", q.Let(
-          {
-            mentorDoc: q.Get(q.Var("mentorRef"))
-          }, 
-          {
-            slug: q.Select(["data", "slug"], q.Var("mentorDoc")),
-          }
-        ))
-      )
-    )
-  
-  const paths = results.data.map((record) => {
+
+  const result = await client.fetch(groq`
+  *[_type == "mentor"]{slug}
+`);
+
+  const paths = result.map((record) => {
     return {
       params: {
-        slug: record.slug
+        slug: record.slug.current,
       },
     };
   });
-  
+
   return {
     paths,
     fallback: false,
   };
 }
 
-
 export async function getStaticProps({ params }) {
-  const results = await client.query(
-    q.Map(
-      q.Paginate(q.Match(q.Index("mentors_by_slug"), params.slug)),
-      q.Lambda("mentorRef", q.Get(q.Var("mentorRef")))
-    )
-  );
+  const slug = params.slug;
+  const query = groq`*[_type == "mentor" && slug.current == $slug][0]{
+    firstName,
+    lastName,
+    expertise,
+    'days': *[_type == 'day' && tables[]]{
+    }
+  }`;
+  const mentor = await client.fetch(query, { slug });
+  console.log(mentor)
 
-  const mentor = results.data[0].data
-  mentor.id = results.data[0].ref.id
+  const daysResults = await client.fetch(groq`*[_type == "day"] | order(date)`);
 
+  daysResults.forEach(day => {
+    day.tables
+  })
+  
   return {
     props: {
       mentor,
     },
   };
+
+
 }
 
 export default function MentorProfile({ mentor }) {
+  console.log(mentor)
   return (
     <div className="mt-10">
       <div className="relative px-4 xs:px-8">
@@ -61,22 +63,23 @@ export default function MentorProfile({ mentor }) {
                 <div className="flex flex-wrap justify-start text-center md:text-left lg:text-center">
                   <img
                     className="object-cover w-48 h-48 mx-auto rounded-full md:mx-0 lg:mx-auto"
-                    src={mentor.image}
+                    src={urlFor(mentor.image)}
                   />
                   <div className="w-full pt-4 pl-0 mx-auto md:w-auto lg:w-full md:mx-0 lg:mx-auto md:pl-8 lg:pl-0">
-                    <h1 className="text-2xl font-semibold">{mentor.firstName + " " + mentor.lastName}</h1>
+                    <h1 className="text-2xl font-semibold">
+                      {mentor.firstName + " " + mentor.lastName}
+                    </h1>
                     <h2 className="pt-3 text-xl">{mentor.company}</h2>
                     <p>{mentor.role}</p>
                     <p className="pt-3">
                       {mentor.city + ", " + mentor.country}
                     </p>
                     <ul className="flex justify-center pt-4 text-teal-500 md:justify-start lg:justify-center">
-                        <li className="px-2">
-                            <a href={mentor.linkedIn}>
-                                <LinkedInIcon width="6"/>
-                            </a>
-                        </li>
-
+                      <li className="px-2">
+                        <a href={mentor.linkedIn}>
+                          <LinkedInIcon width="6" />
+                        </a>
+                      </li>
                     </ul>
                   </div>
                 </div>
@@ -93,24 +96,22 @@ export default function MentorProfile({ mentor }) {
                         Wed 4th December
                         <span className="hidden xs:inline">December</span>
                       </span>
-                      <span className="tag">
-                        Table 20
-                      </span>
+                      <span className="tag">Table 20</span>
                     </div>
                   </div>
                 </div>
                 <div className="pt-8">
-                  <h3 className="profile-heading">
-                    About {mentor.name}:
-                  </h3>
-                  <p>
-                    {mentor.bio}
-                  </p>
+                  <h3 className="profile-heading">About {mentor.name}:</h3>
+                  <p>{mentor.bio}</p>
                 </div>
                 <div className="pt-8">
                   <h3 className="profile-heading">Areas of Expertise:</h3>
                   {mentor.expertise.map((area) => {
-                    return <span key={area} className="tag mb-3 mr-4">{area}</span>
+                    return (
+                      <span key={area} className="tag mb-3 mr-4">
+                        {area}
+                      </span>
+                    );
                   })}
                 </div>
               </div>

@@ -1,5 +1,7 @@
 import ProfileImage from "@/components/ProfileImage";
 import { useRef, useState } from "react";
+import client from "@/utils/sanity";
+import urlFor from "@/utils/imageUrlBuilder";
 
 const FileUpload = ({ currentImage, rhfRef, imageName }) => {
   const [file, setFile] = useState(currentImage);
@@ -10,26 +12,24 @@ const FileUpload = ({ currentImage, rhfRef, imageName }) => {
     uploadBtn.current.value = "Uploading...";
 
     const files = e.target.files;
-    const data = new FormData();
-    data.append("file", files[0]);
-    data.append("upload_preset", "ea20dd");
-
-    const res = await fetch(
-      "https://api.cloudinary.com/v1_1/sbcaus/image/upload",
-      {
-        method: "POST",
-        body: data,
-      }
-    );
-
-    const file = await res.json();
-    setFile(file.secure_url);
+    try {
+      client.assets
+      .upload("image", files[0], {
+        filename: files[0].name,
+      })
+      .then((imageAsset) => {
+        setFile(imageAsset)
+      })
+    } catch (e) {
+      console.log(e)
+    }
+    
   }
 
   return (
     <div className="flex items-center">
       <span className="h-12 w-12 rounded-full overflow-hidden bg-gray-100">
-        <ProfileImage imageURL={file} />
+        <ProfileImage imageURL={urlFor(file)} />
       </span>
       <div onClick={() => inputElement.current.click()}>
         {/* Button displayed in UI, click triggers click of file upload below*/}
@@ -51,7 +51,7 @@ const FileUpload = ({ currentImage, rhfRef, imageName }) => {
         <input
           ref={rhfRef}
           name={imageName || "image"}
-          value={file}
+          value={file._id || ( file.asset ? file.asset._ref : "")} // depends on whether image has been changed or not 
           className="hidden"
           onChange={() => console.log("File changed")}
         />

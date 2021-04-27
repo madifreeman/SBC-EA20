@@ -3,54 +3,41 @@ import EditTeamMemberForm from "@/components/EditTeamMemberForm";
 import AddTeamMemberForm from "@/components/AddTeamMemberForm";
 import EditStartupForm from "@/components/EditStartupForm";
 import { Transition } from "@headlessui/react";
-import { q, client } from "@/utils/fauna";
+// import { q, client } from "@/utils/fauna";
+import client from "@/utils/sanity";
+import groq from "groq";
+import { jsonFetcher } from "@/utils/jsonFetcher";
 
 export async function getServerSideProps({ params }) {
-  const results = await client.query(
-    q.Map(
-      q.Paginate(q.Match(q.Index("startups_by_slug"), params.slug)),
-      q.Lambda("startupRef", q.Get(q.Var("startupRef")))
-    )
-  );
+  // SANITY
+  const slug = params.slug;
+  const query = groq`*[_type == "startup" && slug.current == $slug][0]{
+    "startup": { 
+      name, 
+      city, 
+      country, 
+      description, 
+      problem, 
+      solution, 
+      different, 
+      achievement, 
+      themes, 
+      website, 
+      email, 
+      twitter, 
+      facebook, 
+      image,
+      linkedIn,
+      'slug': slug.current, 
+      _id},
+    "team": teamMembers[]->{name, role, twitter, linkedIn, image, _id}
+  }`;
 
-  const startup = results.data[0].data;
-  startup.id = results.data[0].ref.id;
-  const team = (await getTeamMembers(startup.id)) || [];
+  const result = await client.fetch(query, { slug });
 
   return {
-    props: {
-      startup,
-      team,
-    },
+    props: result,
   };
-
-  async function getTeamMembers(startup) {
-    const results = await client.query(
-      q.Map(
-        q.Paginate(q.Match(q.Index("teamMembers_by_startup"), startup)),
-        q.Lambda(
-          "teamMemberRef",
-          q.Let(
-            {
-              teamMemberDoc: q.Get(q.Var("teamMemberRef")),
-            },
-            {
-              id: q.Select(["ref", "id"], q.Var("teamMemberDoc")),
-              name: q.Select(["data", "name"], q.Var("teamMemberDoc")),
-              image: q.Select(["data", "image"], q.Var("teamMemberDoc")),
-              twitter: q.Select(["data", "twitter"], q.Var("teamMemberDoc")),
-              linkedIn: q.Select(["data", "linkedIn"], q.Var("teamMemberDoc")),
-              role: q.Select(["data", "role"], q.Var("teamMemberDoc")),
-            }
-          )
-        )
-      )
-    );
-
-    const teamMembers = results.data;
-
-    return teamMembers;
-  }
 }
 
 export default function EditStartup({ startup, team }) {
@@ -58,19 +45,69 @@ export default function EditStartup({ startup, team }) {
   // Convert team array into object with team member id as key to make lookup easier
   let members = {};
   team.forEach((member) => {
-    members[member.id] = member;
+    members[member._id] = member;
   });
+  console.log(members)
 
   const [teamMembers, setTeamMembers] = useState(members);
   const [isAddingTeamMember, setIsAddingTeamMember] = useState(false);
 
-  function handleTeamMemberDelete(teamMemberId) {
+  async function handleTeamMemberDelete(teamMemberID) {
     // Remove team member from state
+    const body = {
+      id: startup._id,
+      unset: [`teamMembers[_ref=="${teamMemberID}"]`]
+    }
     const newTeam = { ...teamMembers };
-    delete newTeam[teamMemberId];
-
+    delete newTeam[teamMemberID];
     setTeamMembers(newTeam);
+
+    // Delete from Team Member Array on Startup
+    const result = await putRequest(body);
+    // Delete document all together
+    console.log("something else")
+    await jsonFetcher(`/api/team-members/${teamMemberID}`, {
+      method: 'DELETE',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({id: teamMemberID})
+    });
+
+    
   }
+
+  async function handleAddTeamMember(teamMember) {
+      const newTeam = {...teamMembers};
+      newTeam[teamMember._id] = teamMember;
+      const body = {
+        id: startup._id,
+        toInsert: {
+          at: 'after',
+          position: "teamMembers[-1]",
+          items: [{
+          _type: "reference",
+          _ref: teamMember._id,
+          _key: teamMember._id
+        }]
+        }  
+      }
+      
+      console.log(newTeam)
+      const result = await putRequest(body);
+
+      setTeamMembers(newTeam);
+      setIsAddingTeamMember(false);
+    }
+
+    async function putRequest(body) {
+      const result = await jsonFetcher(`/api/startups/${startup._id}`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(body)
+      })
+      console.log("putted")
+      return result;
+    }
+
 
   return (
     <div className="-mt-8">
@@ -122,12 +159,7 @@ export default function EditStartup({ startup, team }) {
                   <AddTeamMemberForm
                     startupId={startup.id}
                     onCancel={() => setIsAddingTeamMember(!isAddingTeamMember)}
-                    onAdd={(teamMember) => {
-                      const newTeam = { ...team };
-                      newTeam[teamMember.id] = teamMember;
-                      setTeamMembers(newTeam);
-                      setIsAddingTeamMember(false);
-                    }}
+                    onAdd={(teamMember) => handleAddTeamMember(teamMember) }
                   />
                 </Transition>
                 {Object.keys(teamMembers).map((key) => {
@@ -139,7 +171,7 @@ export default function EditStartup({ startup, team }) {
                       twitter={teamMembers[key].twitter}
                       linkedIn={teamMembers[key].linkedIn}
                       image={teamMembers[key].image}
-                      id={key}
+                      _id={teamMembers[key]._id}
                       onDelete={() => handleTeamMemberDelete(key)}
                     />
                   );

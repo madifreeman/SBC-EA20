@@ -1,6 +1,5 @@
 import React from "react";
 import TeamMember from "@/components/TeamMember";
-import { q, client } from "@/utils/fauna";
 import {
   InstagramIcon,
   LinkedInIcon,
@@ -9,29 +8,19 @@ import {
   GlobeIcon,
   MailIcon,
 } from "@/public/icons";
+import client from "@/utils/sanity";
+import groq from "groq";
+import urlFor from "@/utils/imageUrlBuilder";
 
 export async function getStaticPaths() {
-  const results = await client.query(
-    q.Map(
-      q.Paginate(q.Documents(q.Collection("Startups"))),
-      q.Lambda(
-        "startupRef",
-        q.Let(
-          {
-            startupDoc: q.Get(q.Var("startupRef")),
-          },
-          {
-            slug: q.Select(["data", "slug"], q.Var("startupDoc")),
-          }
-        )
-      )
-    )
-  );
+  const result = await client.fetch(groq`
+  *[_type == "startup"]{slug}
+`);
 
-  const paths = results.data.map((record) => {
+  const paths = result.map((record) => {
     return {
       params: {
-        slug: record.slug,
+        slug: record.slug.current,
       },
     };
   });
@@ -43,52 +32,35 @@ export async function getStaticPaths() {
 }
 
 export async function getStaticProps({ params }) {
-  const results = await client.query(
-    q.Map(
-      q.Paginate(q.Match(q.Index("startups_by_slug"), params.slug)),
-      q.Lambda("startupRef", q.Get(q.Var("startupRef")))
-    )
-  );
+  const slug = params.slug;
+  const query = groq`*[_type == "startup" && slug.current == $slug][0]{
+      name, 
+      city, 
+      country, 
+      description, 
+      problem, 
+      solution, 
+      different, 
+      achievement, 
+      themes,
+      website, 
+      email, 
+      twitter, 
+      facebook, 
+      image,
+      "team": teamMembers[]->{name, role, twitter, linkedIn, image}
+  }`;
 
-  const startup = results.data[0].data;
-  startup.id = results.data[0].ref.id;
-  startup.team = (await getTeamMembers(startup.id)) || [];
-
+  
+  const startup = await client.fetch(query, { slug });
+  console.log(startup)
+  
   return {
     props: {
       startup,
     },
   };
-
-  async function getTeamMembers(startup) {
-    const results = await client.query(
-      q.Map(
-        q.Paginate(q.Match(q.Index("teamMembers_by_startup"), startup)),
-        q.Lambda(
-          "teamMemberRef",
-          q.Let(
-            {
-              teamMemberDoc: q.Get(q.Var("teamMemberRef")),
-            },
-            {
-              id: q.Select(["ref", "id"], q.Var("teamMemberDoc")),
-              name: q.Select(["data", "name"], q.Var("teamMemberDoc")),
-              image: q.Select(["data", "image"], q.Var("teamMemberDoc")),
-              twitter: q.Select(["data", "twitter"], q.Var("teamMemberDoc")),
-              linkedIn: q.Select(["data", "linkedIn"], q.Var("teamMemberDoc")),
-              role: q.Select(["data", "role"], q.Var("teamMemberDoc")),
-            }
-          )
-        )
-      )
-    );
-  
-    const teamMembers = results.data;
-  
-    return teamMembers;
-  }
 }
-
 
 export default function StartupProfile({ startup }) {
   const qAndAs = [
@@ -120,7 +92,7 @@ export default function StartupProfile({ startup }) {
                 <div className="flex flex-wrap justify-start text-center md:flex-nowrap lg:flex-wrap md:text-left lg:text-center">
                   <img
                     className="object-cover w-48 h-48 mx-auto border-2 border-gray-200 rounded-full md:mx-0 lg:mx-auto"
-                    src={startup.image}
+                    src={urlFor(startup.image)}
                   />
 
                   <div className="w-full pt-4 pl-0 mx-auto md:w-auto lg:w-full md:mx-0 lg:mx-auto md:pl-8 lg:pl-0 md:pt-0 lg:pt-4">
@@ -181,12 +153,16 @@ export default function StartupProfile({ startup }) {
               <div className="px-8 py-12 bg-white rounded-lg shadow md:p-12">
                 {qAndAs.map((qAndA) => (
                   <div key={qAndA.question}>
-                    <h3 className="pb-2 text-xl font-semibold">{qAndA.question}</h3>
+                    <h3 className="pb-2 text-xl font-semibold">
+                      {qAndA.question}
+                    </h3>
                     <p className="pb-8 text-lg">{qAndA.answer}</p>
                   </div>
                 ))}
                 <div>
-                  <h3 className="pb-2 text-xl font-semibold">Program themes:</h3>
+                  <h3 className="pb-2 text-xl font-semibold">
+                    Program themes:
+                  </h3>
                   {startup.themes.map((theme) => (
                     <span key={theme} className="tag mb-3 mr-2">
                       {theme}
@@ -203,7 +179,7 @@ export default function StartupProfile({ startup }) {
                             key={teamMember.name}
                             name={teamMember.name}
                             role={teamMember.role}
-                            img={teamMember.image}
+                            img={urlFor(teamMember.image)}
                             linkedIn={teamMember.linkedIn}
                             twitter={teamMember.twitter}
                           />
@@ -220,4 +196,3 @@ export default function StartupProfile({ startup }) {
     </div>
   );
 }
-

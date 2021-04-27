@@ -3,20 +3,14 @@ import { useForm } from "react-hook-form";
 import { useRef } from "react";
 import FileUpload from "@/components/FileUpload";
 import { areasOfExpertise } from "@/utils/areasOfExpertise";
-import { q, client } from "@/utils/fauna";
+import { jsonFetcher } from "@/utils/jsonFetcher";
+import sanityClient from "@/utils/sanity";
+import groq from "groq";
 
 export async function getServerSideProps() {
-  const results = await client.query(
-    q.Map(
-      q.Paginate(q.Match(q.Index("mentors_by_slug"), "caitlin-ofarrell")), // TODO: edit once auth system operating
-      q.Lambda("mentorRef", q.Get(q.Var("mentorRef")))
-    )
-  );
-
-  const mentor = results.data[0].data;
-  mentor.id = results.data[0].ref.id;
-  mentor.programs = [];
-
+  const mentor = await sanityClient.fetch(
+    groq`*[_type == "mentor" && slug.current == 'caitlin-o-farrell'][0]`
+  ); // TODO: make dynamic once auth system operating
   return {
     props: { mentor },
   };
@@ -49,14 +43,30 @@ export default function EditMentor({ mentor }) {
   ];
 
   // TODO: Initial info will be submitted when account is set up,
-  // then will need to be updated 
+  // then will need to be updated
   async function onSubmit(data) {
-    updateButtonRef.current.value = "Updating...";
-    await client.query(
-      q.Update(q.Ref(q.Collection("Mentors"), mentor.id), {
-        data: data,
-      })
-    );
+    const image = {
+      _type: "image",
+      asset: {
+        _type: "reference",
+        _ref: data.image,
+      },
+    }
+
+    const body = {
+      id: mentor._id,
+      set: {
+        ...data,
+        image: image
+      },
+    };
+
+    await jsonFetcher(`/api/mentors/${mentor._id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
     updateButtonRef.current.value = "Updated!";
     setTimeout(() => (updateButtonRef.current.value = "Update"), 3000);
   }
@@ -88,7 +98,7 @@ export default function EditMentor({ mentor }) {
               <div className="mt-6 sm:mt-5 space-y-6 sm:space-y-5">
                 <TextInput
                   fieldName="First Name"
-                  fieldId="First Name"
+                  fieldId="firstName"
                   fieldValue={mentor.firstName}
                   fieldDescription="This will be publicly visible on our website."
                   isRequired={true}
@@ -97,7 +107,7 @@ export default function EditMentor({ mentor }) {
                 />
                 <TextInput
                   fieldName="Last Name"
-                  fieldId="Last Name"
+                  fieldId="lastName"
                   fieldValue={mentor.lastName}
                   isRequired={true}
                   fieldDescription="This will be publicly visible on our website."
@@ -106,7 +116,7 @@ export default function EditMentor({ mentor }) {
                 />
                 <TextInput
                   fieldName="Email Address"
-                  fieldId="Email"
+                  fieldId="email"
                   fieldValue={mentor.email}
                   isRequired={true}
                   fieldDescription="We recommend using a personal email so that we don't lose touch if you move company. This will not be made public and will only be used by SBC to contact you when needed."
@@ -115,7 +125,7 @@ export default function EditMentor({ mentor }) {
                 />
                 <TextInput
                   fieldName="Mobile"
-                  fieldId="Phone"
+                  fieldId="mobile"
                   fieldValue={mentor.phone}
                   isRequired={false}
                   fieldDescription="This will not be made public and will only be used by SBC to contact you when needed."
@@ -124,7 +134,7 @@ export default function EditMentor({ mentor }) {
                 />
                 <TextInput
                   fieldName="Company"
-                  fieldId="Company"
+                  fieldId="company"
                   fieldValue={mentor.company}
                   isRequired={true}
                   fieldDescription="Where do you work? This will be publicly visible on our website."
@@ -133,7 +143,7 @@ export default function EditMentor({ mentor }) {
                 />
                 <TextInput
                   fieldName="Job Title"
-                  fieldId="Role"
+                  fieldId="role"
                   fieldValue={mentor.role}
                   isRequired={true}
                   fieldDescription="What is your current role? This will be publicly visible on our website."
@@ -142,7 +152,7 @@ export default function EditMentor({ mentor }) {
                 />
                 <TextInput
                   fieldName="City"
-                  fieldId="City"
+                  fieldId="city"
                   fieldValue={mentor.city}
                   isRequired={true}
                   fieldDescription="What city do you live in? Eg. Melbourne, Sydney, etc. This will be publicly visible on our website."
@@ -151,7 +161,7 @@ export default function EditMentor({ mentor }) {
                 />
                 <TextInput
                   fieldName="Country"
-                  fieldId="Country"
+                  fieldId="country"
                   fieldValue={mentor.country}
                   isRequired={true}
                   fieldDescription="What country do you live in? This will be publicly visible on our website."
@@ -160,7 +170,7 @@ export default function EditMentor({ mentor }) {
                 />
                 <TextInput
                   fieldName="Dietary Requirements"
-                  fieldId="Dietary"
+                  fieldId="dietary"
                   fieldValue={mentor.dietary}
                   isRequired={false}
                   fieldDescription="Used for internal purposes only."
@@ -192,12 +202,10 @@ export default function EditMentor({ mentor }) {
                               <input
                                 type="checkbox"
                                 className="w-4 h-4 text-teal-500 cursor-pointer form-checkbox"
-                                name="Programs"
+                                name="progs"
                                 value={program}
                                 defaultChecked={
-                                  mentor.programs.includes(program)
-                                    ? true
-                                    : false
+                                  mentor.progs.includes(program) ? true : false
                                 }
                                 ref={register}
                               />
@@ -235,11 +243,14 @@ export default function EditMentor({ mentor }) {
                                 <div className="flex items-center">
                                   <label className="flex inline items-center">
                                     <input
-                                      name="Mentor Type"
+                                      name="mentorType"
                                       type="radio"
                                       className=" cursor-pointer focus:ring-indigo-500 text-indigo-600 border-gray-300"
                                       ref={register}
                                       value={type.name}
+                                      defaultChecked={
+                                        mentor.mentorType === type.name
+                                      }
                                     />
 
                                     <span className="ml-3 cursor-pointer">
@@ -290,11 +301,14 @@ export default function EditMentor({ mentor }) {
                               <div className="my-2 space-y-4" key={time}>
                                 <div className="flex items-center">
                                   <input
-                                    name="Time Commitment"
+                                    name="timeCommitment"
                                     type="radio"
                                     className="cursor-pointer focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300"
                                     ref={register}
                                     value={time}
+                                    defaultChecked={
+                                      mentor.timeCommitment === time
+                                    }
                                   />
                                   <label
                                     htmlFor={time}
@@ -338,9 +352,12 @@ export default function EditMentor({ mentor }) {
                                   <input
                                     type="checkbox"
                                     className="w-4 h-4 text-teal-500 cursor-pointer form-checkbox"
-                                    name="Expertise[]"
+                                    name="expertise[]"
                                     value={area}
                                     ref={register}
+                                    defaultChecked={mentor.expertise.includes(
+                                      area
+                                    )}
                                   />
                                   <span className="ml-3 text-sm">{area}</span>
                                 </label>
@@ -355,7 +372,7 @@ export default function EditMentor({ mentor }) {
 
                 <TextInput
                   fieldName="Biography"
-                  fieldId="Bio Fix"
+                  fieldId="bio"
                   fieldValue={mentor.bio}
                   isRequired={false}
                   fieldDescription="This will be publicly visible on our website. Max 500 words."
@@ -365,7 +382,7 @@ export default function EditMentor({ mentor }) {
                 />
                 <TextInput
                   fieldName="LinkedIn Profile"
-                  fieldId="LinkedIn"
+                  fieldId="linkedIn"
                   fieldValue={mentor.linkedIn}
                   isRequired={false}
                   fieldDescription="This will be publicly visible on our website."
@@ -374,7 +391,7 @@ export default function EditMentor({ mentor }) {
                 />
                 <TextInput
                   fieldName="Twitter Profile"
-                  fieldId="Twitter"
+                  fieldId="twitter"
                   fieldValue={mentor.twitter}
                   isRequired={false}
                   fieldDescription="This will be publicly visible on our website."
@@ -393,7 +410,7 @@ export default function EditMentor({ mentor }) {
                     </span>
                   </label>
                   <div className="mt-1 sm:mt-0 sm:col-span-2">
-                    <FileUpload currentImage={mentor.photo} rhfRef={register} />
+                    <FileUpload currentImage={mentor.image} rhfRef={register} />
                   </div>
                 </div>
               </div>

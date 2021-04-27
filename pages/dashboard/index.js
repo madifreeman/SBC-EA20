@@ -1,86 +1,112 @@
-import { q, client } from "@/utils/fauna";
+import { q, client as faunaClient } from "@/utils/fauna";
 import Link from "next/link";
+import groq from "groq";
+import sanityClient from "@/utils/sanity";
+import urlFor from "@/utils/imageUrlBuilder";
 
 export async function getServerSideProps() {
-  const results = await client.query({
-    mentor: q.Select(
-      ["data"],
-      q.Map(
-        q.Paginate(q.Match(q.Index("mentors_by_slug"), "caitlin-ofarrell")), // TODO: make dynamic once account system set up
-        q.Lambda(
-          "mentorRef",
-          q.Let(
-            {
-              mentorDoc: q.Get(q.Var("mentorRef")),
-            },
-            {
-              id: q.Select(["ref", "id"], q.Var("mentorDoc")),
-              firstName: q.Select(["data", "firstName"], q.Var("mentorDoc")),
-              lastName: q.Select(["data", "lastName"], q.Var("mentorDoc")),
-              image: q.Select(["data", "image"], q.Var("mentorDoc")),
-              slug: q.Select(["data", "slug"], q.Var("mentorDoc")),
-              role: q.Select(["data", "role"], q.Var("mentorDoc")),
-              company: q.Select(["data", "company"], q.Var("mentorDoc")),
-              day1Table: q.Select(
-                ["data", "day1Table"],
-                q.Var("mentorDoc"),
-                null
-              ),
-              day2Table: q.Select(
-                ["data", "day2Table"],
-                q.Var("mentorDoc"),
-                null
-              ),
-              feedbackSubmittedFor: q.Select(
-                ["data"],
-                q.Paginate(
-                  q.Match(q.Index("feedback_by_mentor"), q.Var("mentorRef"))
-                )
-              ),
-            }
-          )
-        )
-      )
-    ),
-    startups: q.Select(
-      ["data"],
-      q.Map(
-        q.Paginate(q.Documents(q.Collection("Startups"))),
-        q.Lambda(
-          "startupRef",
-          q.Let(
-            {
-              startupDoc: q.Get(q.Var("startupRef")),
-            },
-            {
-              id: q.Select(["ref", "id"], q.Var("startupDoc")),
-              name: q.Select(["data", "name"], q.Var("startupDoc")),
-              city: q.Select(["data", "city"], q.Var("startupDoc")),
-              country: q.Select(["data", "country"], q.Var("startupDoc")),
-              image: q.Select(["data", "image"], q.Var("startupDoc")),
-              slug: q.Select(["data", "slug"], q.Var("startupDoc")),
-            }
-          )
-        )
-      )
-    ),
-  });
+  const mentor = await sanityClient.fetch(groq`
+  *[_type == "mentor" && slug.current == 'caitlin-o-farrell'][0]{
+    firstName, 
+    lastName, 
+    image, 
+    role, 
+    company, 
+    'slug': slug.current }
+`);
+  const startups = await sanityClient.fetch(groq`
+*[_type == "startup"]{
+  name, 
+  city, 
+  country, 
+  image, 
+  'slug': slug.current }
+`);
 
-  const mentor = results.mentor[0];
-  const startups = results.startups;
 
-  startups.forEach((startup) => {
-    startup.feedbackSubmitted = mentor.feedbackSubmittedFor.includes(
-      startup.id
-    );
-  });
+
+  // const results = await faunaClient.query({
+    // mentor: q.Select(
+    //   ["data"],
+    //   q.Map(
+    //     q.Paginate(q.Match(q.Index("mentors_by_slug"), "caitlin-ofarrell")), // TODO: make dynamic once account system set up
+    //     q.Lambda(
+    //       "mentorRef",
+    //       q.Let(
+    //         {
+    //           mentorDoc: q.Get(q.Var("mentorRef")),
+    //         },
+    //         {
+    //           id: q.Select(["ref", "id"], q.Var("mentorDoc")),
+    //           firstName: q.Select(["data", "firstName"], q.Var("mentorDoc")),
+    //           lastName: q.Select(["data", "lastName"], q.Var("mentorDoc")),
+    //           image: q.Select(["data", "image"], q.Var("mentorDoc")),
+    //           slug: q.Select(["data", "slug"], q.Var("mentorDoc")),
+    //           role: q.Select(["data", "role"], q.Var("mentorDoc")),
+    //           company: q.Select(["data", "company"], q.Var("mentorDoc")),
+    //           day1Table: q.Select(
+    //             ["data", "day1Table"],
+    //             q.Var("mentorDoc"),
+    //             null
+    //           ),
+    //           day2Table: q.Select(
+    //             ["data", "day2Table"],
+    //             q.Var("mentorDoc"),
+    //             null
+    //           ),
+    //           feedbackSubmittedFor: q.Select(
+    //             ["data"],
+    //             q.Paginate(
+    //               q.Match(q.Index("feedback_by_mentor"), q.Var("mentorRef"))
+    //             )
+    //           ),
+    //         }
+    //       )
+    //     )
+    //   )
+    // ),
+  //   startups: q.Select(
+  //     ["data"],
+  //     q.Map(
+  //       q.Paginate(q.Documents(q.Collection("Startups"))),
+  //       q.Lambda(
+  //         "startupRef",
+  //         q.Let(
+  //           {
+  //             startupDoc: q.Get(q.Var("startupRef")),
+  //           },
+  //           {
+  //             id: q.Select(["ref", "id"], q.Var("startupDoc")),
+  //             name: q.Select(["data", "name"], q.Var("startupDoc")),
+  //             city: q.Select(["data", "city"], q.Var("startupDoc")),
+  //             country: q.Select(["data", "country"], q.Var("startupDoc")),
+  //             image: q.Select(["data", "image"], q.Var("startupDoc")),
+  //             slug: q.Select(["data", "slug"], q.Var("startupDoc")),
+  //           }
+  //         )
+  //       )
+  //     )
+  //   ),
+  // });
+
+  // const mentor = results.mentor[0];
+  // const startups = results.startups;
+
+  // startups.forEach((startup) => {
+  //   startup.feedbackSubmitted = mentor.feedbackSubmittedFor.includes(
+  //     startup.id
+  //   );
+  // });
+
+  console.log(mentor)
 
   return {
     props: { startups, mentor },
   };
 }
 
-export default function Account({ mentor, startups }) {
+export default function Dashboard({ mentor, startups }) {
+
   const tables = [];
   if (mentor.day1Table) {
     tables.push({
@@ -107,7 +133,7 @@ export default function Account({ mentor, startups }) {
                 <div className="flex flex-wrap justify-start text-center sm:text-left lg:text-center">
                   <img
                     className="object-cover w-48 h-48 mx-auto rounded-full sm:mx-0 lg:mx-auto"
-                    src={mentor.photo}
+                    src={urlFor(mentor.image)}
                   />
                   <div className="w-full pt-4 pl-0 mx-auto sm:w-auto lg:w-full sm:mx-0 lg:mx-auto sm:pl-8 lg:pl-0">
                     <h1 className="text-2xl font-semibold">
@@ -193,7 +219,7 @@ export default function Account({ mentor, startups }) {
                         <div className="flex items-center py-4">
                           <img
                             className="hidden object-cover w-24 h-24 mr-8 border-2 rounded-full md:block border-grey-200"
-                            src={startup.image}
+                            src={urlFor(startup.image)}
                           />
                           <div>
                             <p className="text-xl font-semibold">
@@ -205,7 +231,9 @@ export default function Account({ mentor, startups }) {
                           </div>
                         </div>
                         <div className="flex">
-                          <Link href={`/dashboard/feedback?startup=${startup.slug}`}>
+                          <Link
+                            href={`/dashboard/feedback?startup=${startup.slug}`}
+                          >
                             {startup.feedbackSubmitted ? (
                               <a className="w-20 py-2 font-semibold text-center text-gray-700 bg-gray-200 rounded sm:w-40 hover:shadow-lg hover:bg-teal-600">
                                 <span className="inline sm:hidden">Edit</span>

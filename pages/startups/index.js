@@ -1,39 +1,18 @@
 import { useState } from "react";
-import { q, client } from "@/utils/fauna";
-import { themes } from "@/utils/themes";
 import Link from "next/link";
+import groq from "groq";
+import client from "@/utils/sanity";
+import urlFor from "@/utils/imageUrlBuilder";
+import { themes } from "@/utils/themes";
 
 export async function getStaticProps() {
-  // retrieve records from FaunaDB
-  const results = await client.query(
-    q.Map(
-      q.Paginate(q.Documents(q.Collection("Startups"))),
-      q.Lambda(
-        "startupRef",
-        q.Let(
-          {
-            startupDoc: q.Get(q.Var("startupRef")),
-          },
-          {
-            id: q.Select(["ref", "id"], q.Var("startupDoc")),
-            name: q.Select(["data", "name"], q.Var("startupDoc")),
-            city: q.Select(["data", "city"], q.Var("startupDoc")),
-            country: q.Select(["data", "country"], q.Var("startupDoc")),
-            description: q.Select(["data", "description"], q.Var("startupDoc")),
-            themes: q.Select(["data", "themes"], q.Var("startupDoc")),
-            image: q.Select(["data", "image"], q.Var("startupDoc")),
-            slug: q.Select(["data", "slug"], q.Var("startupDoc")),
-          }
-        )
-      )
-    )
-  );
-
-  const startups = results.data;
-
+  // SANITY
+  const startups = await client.fetch(groq`
+      *[_type == "startup"]{name, city, country, description, image, 'slug': slug.current}
+    `);
   return {
     props: {
-      startups,
+      startups
     },
   };
 }
@@ -42,6 +21,7 @@ export default function Startups({ startups }) {
   const [filteredStartups, setFilter] = useState(startups);
   const [numStartups, setNumStartups] = useState(startups.length);
   let theme = "All Themes";
+  
 
   function handleThemeChange(e) {
     theme = e.target.value;
@@ -75,7 +55,9 @@ export default function Startups({ startups }) {
               {/* TODO: Get below options from DB */}
               <option value="All Themes">All Themes</option>
               {themes.map((theme) => (
-                <option value={theme}>{theme}</option>
+                <option value={theme} key={theme}>
+                  {theme}
+                </option>
               ))}
             </select>
           </label>
@@ -93,7 +75,7 @@ export default function Startups({ startups }) {
                   <div className="h-full flex flex-wrap items-center px-8 py-8 md:py-12 bg-white shadow hover:shadow-lg group rounded cursor-pointer">
                     <img
                       className="h-32 w-32 mx-auto mb-4 sm:ml-0 sm:mr-8 lg:mr-0 sm:mb-0 p-2 object-cover rounded-full border-gray-200 group-hover:border-teal-500 border-2"
-                      src={startup.image}
+                      src={urlFor(startup.image)}
                     ></img>
                     <div className="w-full sm:w-4/6 lg:pl-8 text-center sm:text-left">
                       <h2 className="text-xl group-hover:text-teal-500 font-semibold">

@@ -1,28 +1,30 @@
-import { q, client } from "@/utils/fauna";
+import client from "@/utils/sanity";
 
 export default async function teamMemberById(req, res) {
+  console.log(req.body);
   switch (req.method) {
     case "PUT":
-      try {
-        const teamMemberRes = await client.query(
-          q.Update(q.Ref(q.Collection("TeamMembers"), req.query.id), {
-            data: { ...req.body },
-          })
-        );
-        res.status(200).json(teamMemberRes);
-      } catch (error) {
-        res.status(error.status || 500).end(error.message);
-      }
+      client
+        .patch(req.body.id)
+        .set(req.body.set)
+        .commit()
+        .then((result) => {
+          res.status(200).json(result);
+        })
+        .catch((err) => {
+          console.error("Oh no, the update failed: ", err.message);
+        });
       break;
     case "DELETE":
-      try {
-        const teamMemberRes = await client.query(
-          q.Delete(q.Ref(q.Collection("TeamMembers"), req.query.id))
-        );
-        res.status(200).json(teamMemberRes);
-      } catch (error) {
-        res.status(error.status || 500).end(error.message);
-      }
+      console.log("deleting")
+      client
+        .delete(req.body.id)
+        .then((result) => {
+          res.status(200).json(result);
+        })
+        .catch((err) => {
+          console.error("Delete failed: ", err.message);
+        });
       break;
   }
 }

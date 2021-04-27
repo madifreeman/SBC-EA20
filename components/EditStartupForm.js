@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import React, { useRef } from "react";
 import { themes } from "@/utils/themes"
 import { jsonFetcher } from "@/utils/jsonFetcher"
+import urlFor from "@/utils/imageUrlBuilder";
 
 const EditStartupForm = ({ startup }) => {
   const { register, handleSubmit } = useForm();
@@ -12,14 +13,30 @@ const EditStartupForm = ({ startup }) => {
   async function onSubmit(data) {
     updateButtonRef.current.value = "Updating...";
 
+    const image = {
+      _type: "image",
+      asset: {
+        _type: "reference",
+        _ref: data.image,
+      },
+    }
+
+    const body = {
+      id: startup._id,
+      set: {
+        ...data,
+        image: image
+      },
+    };
+
     // Send changes to fauna
-    const results = await jsonFetcher(`/api/startups/${startup.id}`, {
+    const results = await jsonFetcher(`/api/startups/${startup._id}`, {
       method: 'PUT',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(data)
+      body: JSON.stringify(body)
     })
 
-    console.log(results);
+    // console.log(results);
 
     // Update UI to indicate success
     // TODO: Indicate failure

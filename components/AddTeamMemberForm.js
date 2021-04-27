@@ -4,27 +4,41 @@ import { useForm } from "react-hook-form";
 import React, { useRef } from "react";
 import {jsonFetcher} from "@/utils/jsonFetcher";
 
-const AddStartupForm = ({ startupId, onAdd, onCancel }) => {
+const AddTeamMemberForm = ({ onAdd, onCancel }) => {
   const { register, handleSubmit, reset } = useForm();
   const addButton = useRef(null);
 
   const onSubmit = async data => {
-    data.startup = startupId;
     addButton.current.value = "Adding...";
     addButton.current.focus();
+
+    if (data.image) {
+      data.image = {
+        _type: "image",
+        asset: {
+          _type: "reference",
+          _ref: data.image,
+        },
+      }
+    }
+
+    const body = {
+      _type: 'teamMember',
+      ...data
+    };
 
     const result = await jsonFetcher('/api/team-members', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(data)
+      body: JSON.stringify(body)
     })
+
     
     addButton.current.value = "Add";
     addButton.current.blur();
     reset();
 
-    const newTeamMember = result.data;
-    newTeamMember.id = result.ref['@ref'].id;
+    const newTeamMember = result;
     onAdd(newTeamMember, addButton, data, reset) 
   }
 
@@ -96,4 +110,4 @@ const AddStartupForm = ({ startupId, onAdd, onCancel }) => {
   );
 }
 
-export default AddStartupForm;
+export default AddTeamMemberForm;

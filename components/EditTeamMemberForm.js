@@ -6,7 +6,7 @@ import { q, client } from "@/utils/fauna";
 import { jsonFetcher } from "@/utils/jsonFetcher";
 
 const EditTeamMemberForm = ({
-  id,
+  _id,
   name,
   role,
   twitter,
@@ -17,15 +17,30 @@ const EditTeamMemberForm = ({
   const { register, handleSubmit } = useForm();
   const updateButton = useRef(null);
   const deleteButton = useRef(null);
-
   async function onSubmit(data) {
     updateButton.current.value = "Updating...";
 
+    const image = {
+      _type: "image",
+      asset: {
+        _type: "reference",
+        _ref: data.image,
+      },
+    }
+
+    const body = {
+      id: _id,
+      set: {
+        ...data,
+        image: image
+      },
+    };
+
     // // Send changes to Fauna
-    const results = await jsonFetcher(`/api/team-members/${id}`, {
+    const results = await jsonFetcher(`/api/team-members/${_id}`, {
       method: 'PUT',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(data)
+      body: JSON.stringify(body)
     })
 
     // Update UI to indicate success
@@ -39,16 +54,9 @@ const EditTeamMemberForm = ({
   }
 
   async function handleDelete() {
-    // Remove team member from DB
-    await jsonFetcher(`/api/team-members/${id}`, {
-      method: 'DELETE',
-    });
-
     // Change UI
     deleteButton.current.focus();
-
-    onDelete(id);
-
+    onDelete(_id);
     // TODO: Add animation or alert to more clearly indicate
     // team member has been deleted
   }

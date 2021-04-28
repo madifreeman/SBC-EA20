@@ -1,4 +1,5 @@
 import Link from "next/link";
+import urlFor from "@/utils/imageUrlBuilder";
 
 export default function FeedbackMentor({ mentor }) {
   return (
@@ -11,7 +12,7 @@ export default function FeedbackMentor({ mentor }) {
           <a className="flex-shrink-0 block w-32 h-32 mx-auto sm:w-24 sm:h-24 sm:mx-0">
             <img
               className="object-cover w-32 h-32 border-4 border-white rounded-full sm:w-24 sm:h-24 hover:border-teal-600"
-              src={mentor.image}
+              src={urlFor(mentor.image)}
             />
           </a>
         </Link>

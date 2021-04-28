@@ -10,7 +10,10 @@ export async function getStaticProps() {
       *[_type == "mentor"]{firstName, lastName, image, company, role, _id, day1table, day2table, 
       'slug': slug.current}
     `);
+  
 
+
+  // TODO: Update getting day/table information to coincide with new ticketing system
   const daysResults = await client.fetch(groq`*[_type == "day"] | order(date)`);
 
   const days = daysResults.map((day) => {
@@ -36,6 +39,7 @@ export async function getStaticProps() {
 }
 
 export default function Mentors({ mentors, days }) {
+  console.log(days)
   const [filteredMentors, setFilteredMentors] = useState(mentors);
   const [numMentors, setNumMentors] = useState(mentors.length);
   const dayRefs = new Array(useRef(null), useRef(null));
@@ -44,11 +48,14 @@ export default function Mentors({ mentors, days }) {
   let numDays = days.length;
 
   // Find the day with the most amount of tables to update numTables
+  // TODO: needs to be updated wto coincide with new ticketing system
   days.forEach(day => {
     const numTablesForDay = Object.keys(day.tables).length
     if (numTablesForDay > numTables) numTables = numTablesForDay
   })
 
+
+  // TODO: needs to be updated wto coincide with new ticketing system
   function updateFilter() {
     const table = tableRef.current.value || "all";
 

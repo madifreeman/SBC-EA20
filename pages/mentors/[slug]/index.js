@@ -30,14 +30,16 @@ export async function getStaticProps({ params }) {
     firstName,
     lastName,
     expertise,
+    image,
     'days': *[_type == 'day' && tables[]]{
     }
   }`;
   const mentor = await client.fetch(query, { slug });
   console.log(mentor)
 
-  const daysResults = await client.fetch(groq`*[_type == "day"] | order(date)`);
 
+  // TODO: need to update to coincide with new ticketing system 
+  const daysResults = await client.fetch(groq`*[_type == "day"] | order(date)`);
   daysResults.forEach(day => {
     day.tables
   })
@@ -52,7 +54,6 @@ export async function getStaticProps({ params }) {
 }
 
 export default function MentorProfile({ mentor }) {
-  console.log(mentor)
   return (
     <div className="mt-10">
       <div className="relative px-4 xs:px-8">
@@ -91,7 +92,7 @@ export default function MentorProfile({ mentor }) {
                 <div className="flex flex-wrap pt-4">
                   <div className="w-full lg:w-2/3 xl:w-1/2">
                     <div className="flex items-center justify-between px-5 py-3 mb-4 mr-0 border border-gray-200 rounded-lg md:mr-4 lg:mr-0 xl:mr-4 xl:mb-0">
-                      {/* TODO: populate tables from DB */}
+                      {/* TODO: populate tables from ticketing system */}
                       <span>
                         Wed 4th December
                         <span className="hidden xs:inline">December</span>

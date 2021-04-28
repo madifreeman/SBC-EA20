@@ -1,94 +1,92 @@
-import { q, client } from "@/utils/fauna";
+import { q, client as faunaClient } from "@/utils/fauna";
 import FeedbackDashboardLayout from "@/components/FeedbackDashboardLayout";
 import FeedbackComment from "@/components/FeedbackComment";
+import sanityClient from "@/utils/sanity";
+import groq from "groq";
 
 export async function getServerSideProps({ params }) {
-  const results = await client.query(
-    q.Let(
-      {
-        startupDoc: q.Get(q.Match(q.Index("startups_by_slug"), params.slug)),
-      },
-      {
-        startup: q.Select(["data", "name"], q.Var("startupDoc")),
-        comments: q.Select(
-          ["data"],
-          q.Map(
-            q.Filter(
-              // Get all non-empty comments made about startup in startupDoc
-              q.Paginate(
-                q.Match(
-                  q.Index("feedback_by_startup"),
-                  q.Select(["ref"], q.Var("startupDoc")) // Get feedback by searching with the startupRef
-                )
-              ),
-              q.Lambda(
-                "feedbackRef",
-                q.Not(
-                  q.Equals(
-                    "",
-                    q.Select(["data", "comments"], q.Get(q.Var("feedbackRef"))) // filter out empty comments
-                  )
-                )
-              )
-            ),
+  const startupQuery = groq`*[_type == "startup" && slug.current == $slug][0]{
+    name, 
+    _id,
+    'slug': slug.current
+  }`;
+  const startup = await sanityClient.fetch(startupQuery, { slug: params.slug });
 
-            q.Lambda(
-              // transform into usable format
-              "feedbackRef",
-              q.Let(
-                {
-                  feedbackDoc: q.Get(q.Var("feedbackRef")),
-                },
-                {
-                  comment: q.Select(["data", "comments"], q.Var("feedbackDoc")),
-                  anonymous: q.Select(
-                    ["data", "anonymous"],
-                    q.Var("feedbackDoc")
-                  ),
-                  mentor: q.Let(
-                    // Get info regarding mentor who made comment
-                    {
-                      mentorDoc: q.Get(
-                        q.Select(["data", "mentor"], q.Var("feedbackDoc"))
-                      ),
-                    },
-
-                    {
-                      firstName: q.Select(
-                        ["data", "firstName"],
-                        q.Var("mentorDoc")
-                      ),
-                      lastName: q.Select(
-                        ["data", "lastName"],
-                        q.Var("mentorDoc")
-                      ),
-                      role: q.Select(["data", "role"], q.Var("mentorDoc")),
-                      company: q.Select(
-                        ["data", "company"],
-                        q.Var("mentorDoc")
-                      ),
-                      email: q.Select(["data", "email"], q.Var("mentorDoc")),
-                      image: q.Select(["data", "image"], q.Var("mentorDoc")),
-                      slug: q.Select(["data", "slug"], q.Var("mentorDoc")),
-                    }
-                  ),
-                }
+  const results = await faunaClient.query(
+    q.Select(
+      ["data"],
+      q.Map(
+        q.Filter(
+          // Get all non-empty connections made about startup in startupDoc
+          q.Paginate(
+            q.Match(
+              q.Index("feedback_by_startup"),
+              startup._id // Get feedback by searching with the startupRef
+            )
+          ),
+          q.Lambda(
+            "feedbackRef",
+            q.Not(
+              q.Equals(
+                "",
+                q.Select(["data", "comments"], q.Get(q.Var("feedbackRef"))) // filter out empty comments
               )
             )
           )
         ),
-      }
+        q.Lambda(
+          // transform into usable format
+          "feedbackRef",
+          q.Let(
+            {
+              feedbackDoc: q.Get(q.Var("feedbackRef")),
+            },
+            {
+              comments: q.Select(["data", "comments"], q.Var("feedbackDoc")),
+              anonymous: q.Select(["data", "anonymous"], q.Var("feedbackDoc")),
+              mentorId: q.Select(["data", "mentor"], q.Var("feedbackDoc")),
+            }
+          )
+        )
+      )
     )
   );
 
+  console.log(results)
+
+  const mentorIds = [];
   // Deal with mentors wanting to remain anon
-  const comments = results.comments.map((comment) => {
-    if (comment.anonymous === "No") return comment;
-    comment.mentor = null;
+  const comments = results.map((comment) => {
+    if (comment.anonymous === "No") {
+      mentorIds.push(comment.mentorId);
+      return comment;
+    }
+    comment.mentorId = null;
     return comment;
   });
 
-  const startup = { name: results.startup, slug: params.slug };
+  // Get mentor information from Sanity
+  const mentorsQuery = groq`*[_type == "mentor" && _id in $mentorIds]{
+    firstName, 
+    lastName,
+    role,
+    company,
+    email, 
+    image,
+    _id,
+    'slug': slug.current
+  }`;
+  const mentorArr = await sanityClient.fetch(mentorsQuery, { mentorIds });
+
+  // Map mentor info to each connection
+  const mentorObj = {};
+  mentorArr.forEach((mentor) => (mentorObj[mentor._id] = mentor));
+  comments.forEach((comment) => {
+    comment.mentorId
+      ? (comment.mentor = mentorObj[comment.mentorId])
+      : null;
+  });
+
   return {
     props: { startup, comments },
   };
@@ -107,7 +105,11 @@ export default function FeedbackComments({ startup, comments }) {
       >
         <ul className="pt-10">
           {comments.map((item) => (
-            <FeedbackComment comment={item.comment} mentor={item.mentor} key={Date.now()}/>
+            <FeedbackComment
+              comment={item.comments}
+              mentor={item.mentor}
+              key={Date.now()}
+            />
           ))}
         </ul>
       </FeedbackDashboardLayout>

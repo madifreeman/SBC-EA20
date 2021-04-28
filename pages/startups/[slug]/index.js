@@ -32,7 +32,6 @@ export async function getStaticPaths() {
 }
 
 export async function getStaticProps({ params }) {
-  const slug = params.slug;
   const query = groq`*[_type == "startup" && slug.current == $slug][0]{
       name, 
       city, 
@@ -51,9 +50,8 @@ export async function getStaticProps({ params }) {
       "team": teamMembers[]->{name, role, twitter, linkedIn, image}
   }`;
 
-  
-  const startup = await client.fetch(query, { slug });
-  console.log(startup)
+  console.log(slug)
+  const startup = await client.fetch(query, { slug: params.slug });
   
   return {
     props: {

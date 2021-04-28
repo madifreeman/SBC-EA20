@@ -1,4 +1,5 @@
 import Link from "next/link";
+import urlFor from "@/utils/imageUrlBuilder";
 
 const FeedbackComment = ({ comment, mentor }) => {
   if (mentor !== null)
@@ -11,7 +12,7 @@ const FeedbackComment = ({ comment, mentor }) => {
             <a className="flex-shrink-0 block w-32 h-32 mx-auto sm:w-24 sm:h-24 sm:mx-0">
               <img
                 className="object-cover w-32 h-32 border-4 border-gray-200 rounded-full sm:w-24 sm:h-24 hover:border-teal-600"
-                src={mentor.image || "/images/user.jpg"}
+                src={urlFor(mentor.image) || "/images/user.jpg"}
               />
             </a>
           </Link>

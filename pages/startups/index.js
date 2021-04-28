@@ -8,7 +8,7 @@ import { themes } from "@/utils/themes";
 export async function getStaticProps() {
   // SANITY
   const startups = await client.fetch(groq`
-      *[_type == "startup"]{name, city, country, description, image, 'slug': slug.current}
+      *[_type == "startup"]{name, city, country, description, image, themes, 'slug': slug.current}
     `);
   return {
     props: {

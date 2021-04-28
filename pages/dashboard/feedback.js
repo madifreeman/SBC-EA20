@@ -1,64 +1,54 @@
 import { useForm } from "react-hook-form";
 import FeedbackSlider from "@/components/FeedbackSlider";
-import { q, client } from "@/utils/fauna";
+import { q, client as faunaClient } from "@/utils/fauna";
 import { jsonFetcher } from "@/utils/jsonFetcher";
 import { useRouter } from "next/router";
 import { categories } from "@/utils/feedbackCategories";
+import sanityClient from "@/utils/sanity";
+import groq from "groq";
+import urlFor from "@/utils/imageUrlBuilder";
 
-export async function getServerSideProps({query}) {
-  const results = await client.query(
-    q.Let(
-      {
-        startupDoc: q.Get(q.Match(q.Index("startups_by_slug"), query.startup)),
-        mentorDoc: q.Get(q.Match(q.Index("mentors_by_slug"), "caitlin-ofarrell")), //TODO: Edit once auth system operating
-      },
-      {
-        startup: {
-          id: q.Select(["ref", "id"], q.Var("startupDoc")),
-          name: q.Select(["data", "name"], q.Var("startupDoc")),
-          image: q.Select(["data", "image"], q.Var("startupDoc")),
-          slug: q.Select(["data", "slug"], q.Var("startupDoc")),
-          city: q.Select(["data", "city"], q.Var("startupDoc")),
-          country: q.Select(["data", "country"], q.Var("startupDoc")),
-          description: q.Select(["data", "description"], q.Var("startupDoc")),
-        },
-        mentor: {
-          id: q.Select(["ref", "id"], q.Var("mentorDoc")),
-          slug: q.Select(["data", "slug"], q.Var("mentorDoc")),
-        },
-        scores: q.Select(
-          ["data"],
-          q.Map(
-            q.Paginate(
-              q.Match(
-                q.Index("feedback_by_mentor_and_startup"),
-                // mentor ref
-                q.Select(["ref"], q.Var("mentorDoc")),
-                // startup ref
-                q.Select(["ref"], q.Var("startupDoc"))
-              )
-            ),
-            q.Lambda(
-              "feedbackRef",
-              q.Get(q.Var("feedbackRef"))
-            )
+export async function getServerSideProps({ query }) {
+  const startupQuery = groq`*[_type == "startup" && slug.current == $slug][0]{
+      name, 
+      city, 
+      country, 
+      description, 
+      image,
+      _id,
+      'cohortId': cohort->_id
+  }`;
+  const mentorQuery = groq`*[_type == "mentor" && slug.current == $slug][0]{_id}`;
+
+  const startup = await sanityClient.fetch(startupQuery, {
+    slug: query.startup,
+  });
+  const mentor = await sanityClient.fetch(mentorQuery, {
+    slug: "caitlin-o-farrell",
+  });
+
+  const scoreResults = await faunaClient.query(
+    q.Select(
+      ["data"],
+      q.Map(
+        q.Paginate(
+          q.Match(
+            q.Index("feedback_by_mentor_and_startup"),
+            // mentor ref
+            mentor._id,
+            // startup ref
+            startup._id
           )
         ),
-      }
+        q.Lambda("feedbackRef", q.Get(q.Var("feedbackRef")))
+      )
     )
   );
 
-  const { startup, mentor } = results;
-  console.log(results)
+  const scores = scoreResults[0] ? scoreResults[0].data : {};
 
-  const scores = results.scores[0] ? results.scores[0].data : {};
-  
-  
   if (Object.keys(scores).length > 0) {
-    // Fauna refs cause error serializing when being parsed as props, so delete
-    scores.id = results.scores[0].ref.id;
-    delete scores.mentor;
-    delete scores.startup;
+    scores.id = scoreResults[0].ref.id;
   }
 
   return {
@@ -89,7 +79,7 @@ const FieldTitle = ({ fieldName, required }) => (
   </span>
 );
 
-const RadioButtonsField = props => (
+const RadioButtonsField = (props) => (
   <fieldset className="my-6" name={props.fieldName}>
     <FieldTitle fieldName={props.fieldName} required={props.required} />
     {props.options.map((option) => {
@@ -112,7 +102,7 @@ const RadioButtonsField = props => (
   </fieldset>
 );
 
-const LongTextField = props => (
+const LongTextField = (props) => (
   <div className="my-6">
     <FieldTitle fieldName={props.fieldName} required={props.required} />
     <textarea
@@ -146,11 +136,12 @@ const SliderField = (props) => (
 export default function LeaveFeedback({ startup, mentor, scores }) {
   const { register, handleSubmit, setValue } = useForm();
   const router = useRouter();
-  console.log(scores)
+  console.log(mentor);
 
   async function onSubmit(data) {
-    // parse number fields from string to int
     categories.forEach((category) => {
+      // parse number fields from string to int
+
       // If a score hasn't been selected, default back to the score previously
       // submitted (if there is one) or else default to 0
       if (data[category]) {
@@ -160,27 +151,29 @@ export default function LeaveFeedback({ startup, mentor, scores }) {
       } else data[category] = 0;
     });
 
-    data.startup = startup.id;
-    data.mentor = mentor.id;
     data.feedbackId = scores.id;
 
-    if (scores) {
+    if (data.feedbackId) {
+      // If feedback has been previously submitted
       await jsonFetcher("/api/feedback-submissions", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
     } else {
+      // Add references to Sanity data
+      data.startup = startup._id;
+      data.mentor = mentor._id;
+      data.cohort = startup.cohortId;
+
       await jsonFetcher("/api/feedback-submissions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
-      });
+      })
     }
 
-    
-
-    router.push("/account");
+    router.push("/dashboard")
   }
 
   return (
@@ -193,7 +186,7 @@ export default function LeaveFeedback({ startup, mentor, scores }) {
                 <div className="flex flex-wrap justify-start text-center md:flex-nowrap lg:flex-wrap md:text-left lg:text-center">
                   <img
                     className="object-cover w-48 h-48 mx-auto border-2 border-gray-200 rounded-full md:mx-0 lg:mx-auto"
-                    src={startup.image}
+                    src={urlFor(startup.image)}
                   />
 
                   <div className="w-full pt-4 pl-0 mx-auto md:w-auto lg:w-full md:mx-0 lg:mx-auto md:pl-8 lg:pl-0 md:pt-0 lg:pt-4">

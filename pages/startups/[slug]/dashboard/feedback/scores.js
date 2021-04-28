@@ -1,24 +1,28 @@
-import { q, client } from "@/utils/fauna";
+import { q, client as faunaClient } from "@/utils/fauna";
 import FeedbackDashboardLayout from "@/components/FeedbackDashboardLayout";
 import { mean } from "mathjs";
 import { categories } from "@/utils/feedbackCategories";
+import sanityClient from "@/utils/sanity";
+import groq from "groq";
 
 export async function getServerSideProps({ params }) {
-  const feedbackResults = await client.query(
-    q.Let(
+  const startupQuery = groq`*[_type == "startup" && slug.current == $slug][0]{
+    name, 
+    _id,
+    'slug': slug.current
+  }`;
+
+  const startup = await sanityClient.fetch(startupQuery, { slug: params.slug });
+
+  const feedbackResults = await faunaClient.query(
       {
-        startupDoc: q.Get(q.Match(q.Index("startups_by_slug"), params.slug)),
-      },
-      {
-        // Get name of startup
-        startup: q.Select(["data", "name"], q.Var("startupDoc")),
         // Get matrix of all scores submitted for startup
         startupScores: q.Select(
           ["data"],
           q.Paginate(
             q.Match(
               q.Index("feedback_scores_by_startup"),
-              q.Select(["ref"], q.Var("startupDoc"))
+              startup._id
             )
           ),
           null
@@ -30,7 +34,6 @@ export async function getServerSideProps({ params }) {
         ),
       }
     )
-  );
 
   const {startupScores, allScores} = feedbackResults;
 
@@ -51,10 +54,6 @@ export async function getServerSideProps({ params }) {
   scores["overall"] = startupScores.length > 1 ? mean(startupScores).toFixed(1) : "N/A"
   averages["overall"] = allScores.length > 1 ? mean(allScores).toFixed(1) : "N/A"
 
-  const startup = {
-    name: feedbackResults.startup,
-    slug: params.slug 
-  }
 
   return {
     props: { startup, scores, averages },

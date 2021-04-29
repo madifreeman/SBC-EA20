@@ -50,7 +50,6 @@ export async function getStaticProps({ params }) {
       "team": teamMembers[]->{name, role, twitter, linkedIn, image}
   }`;
 
-  console.log(slug)
   const startup = await client.fetch(query, { slug: params.slug });
   
   return {

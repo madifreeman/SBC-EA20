@@ -42,5 +42,6 @@ export default async function startupById(req, res) {
           console.error("Update failed: ", err.message);
         });
       }
+      break;
   }
 }

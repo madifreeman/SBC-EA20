@@ -9,11 +9,11 @@ export default async function mentorById(req, res) {
         .set(req.body.set)
         .commit()
         .then((result) => {
-          console.log("success")
           res.status(200).json(result);
         })
         .catch((err) => {
-          console.error("Oh no, the update failed: ", err.message);
+          console.error("Update failed: ", err.message);
         });
+      break;
   }
 }

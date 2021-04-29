@@ -13,7 +13,6 @@ const TeamMember = ({ name, img, role, linkedIn, twitter }) => (
         <p className="leading-tight text-gray-400 font-normal">
           {role}
         </p>
-        {/* TODO: Add social bar/symbols */}
         <ul className="flex pt-1 text-teal-500 text-base">
           <li className="px-1" key="1">
             <a href={linkedIn}>

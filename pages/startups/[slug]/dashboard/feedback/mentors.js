@@ -1,4 +1,4 @@
-import { q, client } from "@/utils/fauna";
+import { q, client as faunaClient } from "@/utils/fauna";
 import FeedbackDashboardLayout from "@/components/FeedbackDashboardLayout";
 import FeedbackMentor from "@/components/FeedbackMentor";
 import sanityClient from "@/utils/sanity";
@@ -12,7 +12,7 @@ export async function getServerSideProps({ params }) {
   }`;
   const startup = await sanityClient.fetch(startupQuery, { slug: params.slug });
 
-  const mentorIds = await client.query(
+  const mentorIds = await faunaClient.query(
     q.Select(
       ["data"],
       q.Map(
@@ -53,6 +53,7 @@ export async function getServerSideProps({ params }) {
       image,
       'slug': slug.current
     }`;
+
   const mentors = await sanityClient.fetch(mentorsQuery, { mentorIds });
   
   return {
